@@ -1,6 +1,6 @@
 {
-	"ImportPath": "peilong.me/code_web",
-	"GoVersion": "go1.3.1",
+	"ImportPath": "mashangpao_code_web",
+	"GoVersion": "go1.4.2",
 	"Deps": [
 		{
 			"ImportPath": "github.com/codegangsta/inject",
@@ -13,9 +13,14 @@
 			"Rev": "6241001738f6e1b1ea7c4a4089195e1b0681609a"
 		},
 		{
-			"ImportPath": "github.com/codegangsta/martini-contrib/auth",
-			"Comment": "v0.1-159-g8ce6181",
-			"Rev": "8ce6181c2609699e4c7cd30994b76a850a9cdadc"
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "v1.2-88-ga197e5d",
+			"Rev": "a197e5d40516f2e9f74dcee085a5f2d4604e94df"
+		},
+		{
+			"ImportPath": "gopkg.in/gorp.v1",
+			"Comment": "v1.7.1",
+			"Rev": "c87af80f3cc5036b55b83d77171e156791085e2e"
 		}
 	]
 }
