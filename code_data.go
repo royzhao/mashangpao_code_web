@@ -1,14 +1,13 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/xml"
 	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"gopkg.in/gorp.v1"
 	"log"
-	"os"
+	// "os"
 	"sync"
 	"time"
 )
@@ -34,6 +33,7 @@ type Code struct {
 	Name        string   `json:"name" xml:"name"`
 	Description string   `json:"description" xml:"description"`
 	User_id     int      `json:"user_id" xml:"user_id"`
+	Star        int      `json:"star" xml:"star"`
 }
 
 func (a *Code) String() string {
@@ -156,7 +156,9 @@ func (db *codeDB) Add(a *Code) (int, error) {
 	a.Create_date = time.Now().String()
 	obj := convertJson2Modle(*a)
 	err := db.m.Insert(&obj)
-	checkErr(err, "Insert failed")
+	if checkErr(err, "Insert failed") == true {
+		return 0, err
+	}
 	a.Id = obj.Id
 
 	return a.Id, nil
@@ -185,9 +187,11 @@ func (db *codeDB) Update(a *Code) error {
 	if flag == 1 {
 		return nil
 	}
-	fmt.Sprintf("%s where id=", cmd, a.Id)
+	cmd = fmt.Sprintf("%s where id=%d", cmd, a.Id)
 	count, err := db.m.Exec(cmd)
-	checkErr(err, "Update failed")
+	if checkErr(err, "Update failed") == true {
+		return err
+	}
 	log.Println("Rows updated:", count)
 	return nil
 }
@@ -219,12 +223,13 @@ func (db *codeDB) isUnique(a *Code) bool {
 	return false
 }
 
-func init() {
-	dbmap := initDb()
-	dbmap.TraceOn("[gorp]", log.New(os.Stdout, "myapp:", log.Lmicroseconds))
+func init_code(db *gorp.DbMap) {
+	// dbmap := initDb()
+	// dbmap.TraceOn("[gorp]", log.New(os.Stdout, "myapp:", log.Lmicroseconds))
+
 	// defer dbmap.Db.Close()
 	code_db = &codeDB{
-		m: dbmap,
+		m: db,
 	}
 
 	// p1 := Code_modle{
@@ -240,10 +245,11 @@ func init() {
 	// err := dbmap.Insert(&p2)
 	// checkErr(err, "Insert failed")
 	// Fill the database
-	code_db.Add(&Code{Name: "zpl", Description: "Reign1 333", User_id: 1})
+	// code_db.Add(&Code{Name: "zpl", Description: "Reign1 333", User_id: 1})
 
-	code_db.Add(&Code{Name: "zpl2", Description: "Reign2", User_id: 2})
-	code_db.Add(&Code{Name: "zpl3", Description: "Reign3", User_id: 1})
+	// code_db.Add(&Code{Name: "zpl2", Description: "Reign2", User_id: 2})
+	// code_db.Add(&Code{Name: "zpl3", Description: "Reign3", User_id: 1})
+	db.AddTableWithName(Code_modle{}, "code").SetKeys(true, "Id")
 }
 
 func convertJson2Modle(code Code) Code_modle {
@@ -263,30 +269,6 @@ func convertModle2Json(code Code_modle) Code {
 		Name:        code.Name,
 		Description: code.Description,
 		Create_date: code.Create_date,
-	}
-}
-func initDb() *gorp.DbMap {
-	// connect to db using standard Go database/sql API
-	// use whatever database/sql driver you wish
-	db, err := sql.Open("mysql", "admin:root@tcp(peilong.me:3306)/msp")
-	checkErr(err, "sql.Open failed")
-
-	// construct a gorp DbMap
-	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
-
-	// add a table, setting the table name to 'posts' and
-	// specifying that the Id property is an auto incrementing PK
-	dbmap.AddTableWithName(Code_modle{}, "code").SetKeys(true, "Id")
-
-	// create the table. in a production system you'd generally
-	// use a migration tool, or create the tables via scripts
-	err = dbmap.CreateTablesIfNotExists()
-	checkErr(err, "Create tables failed")
-
-	return dbmap
-}
-func checkErr(err error, msg string) {
-	if err != nil {
-		log.Fatalln(msg, err)
+		Star:        code.Star,
 	}
 }

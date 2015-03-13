@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/codegangsta/martini"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -46,7 +48,7 @@ func GetCodesByUser(r *http.Request, enc Encoder, db codeDB_inter, parms martini
 func GetCode(enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
 	id, err := strconv.Atoi(parms["codeid"])
 	al := db.Get(id)
-	if err != nil || al.Name == "" {
+	if err != nil || al.Id == 0 {
 		// Invalid id, or does not exist
 		return http.StatusNotFound, Must(enc.Encode(
 			NewError(ErrCodeNotExist, fmt.Sprintf("the Code with id %s does not exist", parms["codeid"]))))
@@ -103,24 +105,37 @@ func DeleteCode(enc Encoder, db codeDB_inter, parms martini.Params) (int, string
 			NewError(ErrCodeNotExist, fmt.Sprintf("the code with id %d does not exist,user %d", id, userid))))
 	}
 	db.Delete(id)
-	return http.StatusNoContent, ""
+	return http.StatusOK, fmt.Sprintf("delete code=%d is ok", id)
 }
 
 // Parse the request body, load into an Code structure.
 func getPostCode(r *http.Request, user_id string) *Code {
-	name, description := r.FormValue("name"), r.FormValue("description")
-	id := user_id
-	create_date := time.Now().Local().Format("2006-01-02 15:04:05 +0800")
-	userid, err := strconv.Atoi(id)
+	decoder := json.NewDecoder(r.Body)
+	var t Code
+	err := decoder.Decode(&t)
 	if err != nil {
-		return nil
+		panic(err)
 	}
-	return &Code{
-		Name:        name,
-		Description: description,
-		Create_date: create_date,
-		User_id:     userid,
+	log.Println(t)
+	// name, description := r.FormValue("name"), r.FormValue("description")
+	// id := user_id
+	// create_date := time.Now().Local().Format("2006-01-02 15:04:05 +0800")
+	// userid, err := strconv.Atoi(id)
+	// if err != nil {
+	// 	return nil
+	// }
+	// return &Code{
+	// 	Name:        name,
+	// 	Description: description,
+	// 	Create_date: create_date,
+	// 	User_id:     userid,
+	// }
+	t.User_id, err = strconv.Atoi(user_id)
+	if err != nil {
+		panic(err)
 	}
+	t.Create_date = time.Now().Local().Format("2006-01-02 15:04:05 +0800")
+	return &t
 }
 
 // Like getPostCode, but additionnally, parse and store the `id` query string.

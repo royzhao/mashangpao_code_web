@@ -4,8 +4,10 @@ import (
 	"github.com/codegangsta/martini"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
+
 	//	"github.com/codegangsta/martini-contrib/auth"
 )
 
@@ -13,6 +15,15 @@ import (
 var m *martini.Martini
 
 func init() {
+	// dbmap = nil
+	// //init database
+	dbmap := initDb()
+	dbmap.TraceOn("[gorp]", log.New(os.Stdout, "myapp:", log.Lmicroseconds))
+	// initrundb()
+	//init code module
+	//init_code()
+	init_code(dbmap)
+	init_codestep(dbmap)
 	m = martini.New()
 	// Setup middleware
 	m.Use(martini.Recovery())
@@ -34,25 +45,29 @@ func init() {
 	//删除指定的代码
 	r.Delete(`/code/:userid/:codeid`, DeleteCode)
 
-	// //得到代码的具体步骤
-	// //得到全部的代码步骤元数据
-	// r.Get(`/code/:userid/:codeid/step`, GetCodeSteps)
-	// //得到某一个具体步骤
-	// r.Get(`/code/:userid/:codeid/step/:stepid`, GetCodeStep)
-	// //增加一个代码的具体步骤
-	// r.Post(`/code/:userid/:codeid/step`, AddCodeStep)
-	// //修改置顶的代码步骤的元数据
-	// r.Put(`/code/:userid/:codeid/step/:stepid`, UpdateCodeStep)
-	// //删除
-	// r.Delete(`/code/:userid/:codeid/step/:stepid`, DeleteCodeStep)
+	//得到代码的具体步骤
+	//得到全部的代码步骤元数据
+	r.Get(`/code/:userid/:codeid/step`, GetCodeSteps)
+	//得到某一个具体步骤
+	r.Get(`/code/:userid/:codeid/step/:stepid`, GetCodeStep)
+	//增加一个代码的具体步骤
+	r.Post(`/code/:userid/:codeid/step`, AddCodeStep)
+	//修改置顶的代码步骤的元数据
+	r.Put(`/code/:userid/:codeid/step/:stepid`, UpdateCodeStep)
+	//删除
+	r.Delete(`/code/:userid/:codeid/step/:stepid`, DeleteCodeStep)
 
-	// //具体内容操作
-	// r.Get(`/code/:userid/:codeid/step/:stepid/detail`, GetCodeStepDetail)
-	// //修改具体内容
-	// r.Put(`/code/:userid/:codeid/step/:stepid/detail`, UpdateCodeStepDetail)
+	//具体内容操作
+	r.Get(`/code/:userid/:codeid/step/:stepid/detail`, GetCodeStepDetail)
+	//修改具体内容
+	r.Put(`/code/:userid/:codeid/step/:stepid/detail`, UpdateCodeStepDetail)
+
+	//code run
+	r.Put(`/code/:userid/:codeid/step/:stepid/run`, RunCodeStep)
 
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))
+	m.MapTo(code_step_db, (*codeStepDB_inter)(nil))
 	// Add the router action
 	m.Action(r.Handle)
 
@@ -124,4 +139,5 @@ func main() {
 	if err := http.ListenAndServe(":8001", m); err != nil {
 		log.Fatal(err)
 	}
+
 }

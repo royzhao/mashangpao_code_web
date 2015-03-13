@@ -34,14 +34,14 @@ func (_ jsonEncoder) Encode(v ...interface{}) (string, error) {
 	} else if len(v) == 1 {
 		data = v[0]
 	}
-	
+
 	b, err := json.Marshal(data)
 	buffer := bytes.NewBuffer(b)
-                                                                                                              
-    //将byte数组的内容转换成字符：{"Name":"Jim","Age":25}
-    p_str := buffer.String() 
-    fmt.Println(p_str)
-    
+
+	//将byte数组的内容转换成字符：{"Name":"Jim","Age":25}
+	p_str := buffer.String()
+	fmt.Println(p_str)
+
 	return string(b), err
 }
 
