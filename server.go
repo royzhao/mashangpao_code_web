@@ -28,42 +28,44 @@ func init() {
 	// Setup middleware
 	m.Use(martini.Recovery())
 	m.Use(martini.Logger())
+	//static
+	m.Use(martini.Static("public"))
 	//m.Use(auth.Basic(AuthToken, ""))
 	m.Use(MapEncoder)
 
 	r := martini.NewRouter()
 	//得到所有的代码
-	r.Get(`/code`, GetCodes)
+	r.Get(`/api/code`, GetCodes)
 	//得到某一个用户的所有代码
-	r.Get(`/code/:userid`, GetCodesByUser)
+	r.Get(`/api/code/:userid`, GetCodesByUser)
 	//一个用户增加一个代码
-	r.Post(`/code/:userid`, AddCode)
+	r.Post(`/api/code/:userid`, AddCode)
 	//查询一个指定的代码
-	r.Get(`/code/:userid/:codeid`, GetCode)
+	r.Get(`/api/code/:userid/:codeid`, GetCode)
 	//修改指定的代码
-	r.Put(`/code/:userid/:codeid`, UpdateCode)
+	r.Put(`/api/code/:userid/:codeid`, UpdateCode)
 	//删除指定的代码
-	r.Delete(`/code/:userid/:codeid`, DeleteCode)
+	r.Delete(`/api/code/:userid/:codeid`, DeleteCode)
 
 	//得到代码的具体步骤
 	//得到全部的代码步骤元数据
-	r.Get(`/code/:userid/:codeid/step`, GetCodeSteps)
+	r.Get(`/api/code/:userid/:codeid/step`, GetCodeSteps)
 	//得到某一个具体步骤
-	r.Get(`/code/:userid/:codeid/step/:stepid`, GetCodeStep)
+	r.Get(`/api/code/:userid/:codeid/step/:stepid`, GetCodeStep)
 	//增加一个代码的具体步骤
-	r.Post(`/code/:userid/:codeid/step`, AddCodeStep)
+	r.Post(`/api/code/:userid/:codeid/step`, AddCodeStep)
 	//修改置顶的代码步骤的元数据
-	r.Put(`/code/:userid/:codeid/step/:stepid`, UpdateCodeStep)
+	r.Put(`/api/code/:userid/:codeid/step/:stepid`, UpdateCodeStep)
 	//删除
-	r.Delete(`/code/:userid/:codeid/step/:stepid`, DeleteCodeStep)
+	r.Delete(`/api/code/:userid/:codeid/step/:stepid`, DeleteCodeStep)
 
 	//具体内容操作
-	r.Get(`/code/:userid/:codeid/step/:stepid/detail`, GetCodeStepDetail)
+	r.Get(`/api/code/:userid/:codeid/step/:stepid/detail`, GetCodeStepDetail)
 	//修改具体内容
-	r.Put(`/code/:userid/:codeid/step/:stepid/detail`, UpdateCodeStepDetail)
+	r.Put(`/api/code/:userid/:codeid/step/:stepid/detail`, UpdateCodeStepDetail)
 
 	//code run
-	r.Put(`/code/:userid/:codeid/step/:stepid/run`, RunCodeStep)
+	r.Put(`/api/code/:userid/:codeid/step/:stepid/run`, RunCodeStep)
 
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))
@@ -99,6 +101,9 @@ func MapEncoder(c martini.Context, w http.ResponseWriter, r *http.Request) {
 		c.MapTo(xmlEncoder{}, (*Encoder)(nil))
 		w.Header().Set("Content-Type", "application/xml")
 	case ".text":
+		c.MapTo(textEncoder{}, (*Encoder)(nil))
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	case ".html":
 		c.MapTo(textEncoder{}, (*Encoder)(nil))
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	default:
