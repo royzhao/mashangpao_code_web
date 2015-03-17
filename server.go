@@ -65,7 +65,8 @@ func init() {
 	r.Put(`/api/code/:userid/:codeid/step/:stepid/detail`, UpdateCodeStepDetail)
 
 	//code run
-	r.Put(`/api/code/:userid/:codeid/step/:stepid/run`, RunCodeStep)
+	r.Put(`/api/code/run/:imageid`, RunCodeStep)
+	r.Get(`/api/code/run/:runid`, GetRunResult)
 
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))
