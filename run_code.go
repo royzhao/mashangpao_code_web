@@ -11,6 +11,7 @@ import (
 type Run_code struct {
 	Code    string
 	Imageid int
+	compile bool
 }
 type Run_res struct {
 	Res    string

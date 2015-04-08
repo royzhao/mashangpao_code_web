@@ -34,7 +34,7 @@ func (_ jsonEncoder) Encode(v ...interface{}) (string, error) {
 	} else if len(v) == 1 {
 		data = v[0]
 	}
-
+	fmt.Println(data)
 	b, err := json.Marshal(data)
 	buffer := bytes.NewBuffer(b)
 
