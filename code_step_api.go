@@ -35,6 +35,19 @@ func GetCodeStep(r *http.Request, enc Encoder, db codeStepDB_inter, parms martin
 	}
 	return http.StatusOK, Must(enc.Encode(al))
 }
+func GetCodeStepCmd(r *http.Request, enc Encoder, db codeStepDB_inter, parms martini.Params) (int, string) {
+	id, err := strconv.Atoi(parms["stepid"])
+	if err != nil {
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the Code step with id %s cmd does not exist", parms["stepid"]))))
+	}
+	al := db.GetCodeCmds(id)
+	if len(al) == 0 {
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the Code step with id %s cmd does not exist", parms["stepid"]))))
+	}
+	return http.StatusOK, Must(enc.Encode(al))
+}
 
 // // Addcode creates the posted code step.
 func AddCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms martini.Params, db codeStepDB_inter) (int, string) {
@@ -51,6 +64,28 @@ func AddCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms mart
 		// TODO : Location is expected to be an absolute URI, as per the RFC2616
 		w.Header().Set("Location", fmt.Sprintf("/code/%s/%d/%d", userid, codeid, id))
 		return http.StatusCreated, Must(enc.Encode(al))
+	default:
+		panic(err)
+	}
+}
+
+func UpdateCodeStepCmd(r *http.Request, enc Encoder, db codeStepDB_inter, parms martini.Params) (int, string) {
+	stepid, err := strconv.Atoi(parms["stepid"])
+	if err != nil {
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the Code step with id %s cmd does not exist", parms["stepid"]))))
+	}
+	al, err := getPutCodeStepCmd(r, parms)
+	if err != nil {
+		// Invalid id, 404
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("bad request"))))
+	}
+	err = db.UpdateCodeCmd(stepid, al)
+	al = db.GetCodeCmds(stepid)
+	switch err {
+	case nil:
+		return http.StatusOK, Must(enc.Encode(al))
 	default:
 		panic(err)
 	}
@@ -176,6 +211,26 @@ func getPutCodeSetpDetail(r *http.Request, parms martini.Params) (*Code_detail, 
 	return &t, nil
 }
 
+func getPutCodeStepCmd(r *http.Request, parms martini.Params) ([]Code_step_cmd, error) {
+	id, err := strconv.Atoi(parms["stepid"])
+	if err != nil {
+		return nil, err
+	}
+	log.Println("stepid" + parms["stepid"])
+	decoder := json.NewDecoder(r.Body)
+	var t []Code_step_cmd
+	err = decoder.Decode(&t)
+	if err != nil {
+		panic(err)
+	}
+	log.Println(t)
+	for i, _ := range t {
+		t[i].Stepid = id
+		t[i].Id = 0
+	}
+	log.Println(t)
+	return t, nil
+}
 func toIfaceStep(v []Code_step) []interface{} {
 	if len(v) == 0 {
 		return nil

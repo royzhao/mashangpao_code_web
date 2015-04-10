@@ -64,6 +64,10 @@ func init() {
 	//修改具体内容
 	r.Put(`/api/code/:userid/:codeid/step/:stepid/detail`, UpdateCodeStepDetail)
 
+	//add command
+	r.Put(`/api/code/:userid/:codeid/step/:stepid/cmd`, UpdateCodeStepCmd)
+	r.Get(`/api/code/:userid/:codeid/step/:stepid/cmd`, GetCodeStepCmd)
+
 	//code run
 	r.Put(`/api/code/run/:imageid`, RunCodeStep)
 	r.Get(`/api/code/run/:runid`, GetRunResult)
