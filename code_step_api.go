@@ -29,7 +29,7 @@ func GetCodeStep(r *http.Request, enc Encoder, db codeStepDB_inter, parms martin
 			NewError(ErrCodeNotExist, fmt.Sprintf("the Code step with id %s does not exist", parms["stepid"]))))
 	}
 	al := db.Get(id)
-	if al.Id == 0 {
+	if al.Meta.Id == 0 {
 		return http.StatusNotFound, Must(enc.Encode(
 			NewError(ErrCodeNotExist, fmt.Sprintf("the Code step with id %s does not exist", parms["stepid"]))))
 	}
@@ -104,9 +104,9 @@ func UpdateCodeStep(r *http.Request, enc Encoder, db codeStepDB_inter, parms mar
 	switch err {
 	case ErrAlreadyExists:
 		return http.StatusConflict, Must(enc.Encode(
-			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the code step '%s' from '%s' already exists", a.Name, a.Description))))
+			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the code step '%s' from '%s' already exists", a.Meta.Name, a.Meta.Description))))
 	case nil:
-		if a.Id == 0 {
+		if a.Meta.Id == 0 {
 			return http.StatusNotFound, Must(enc.Encode(
 				NewError(ErrCodeNotExist, fmt.Sprintf("not found obj %d", al.Id))))
 		}
@@ -120,7 +120,7 @@ func DeleteCodeStep(enc Encoder, db codeStepDB_inter, parms martini.Params) (int
 	userid, err := strconv.Atoi(parms["userid"])
 	stepid, err := strconv.Atoi(parms["stepid"])
 	al := db.Get(stepid)
-	if err != nil || al.Name == "" {
+	if err != nil || al.Meta.Name == "" {
 		return http.StatusNotFound, Must(enc.Encode(
 			NewError(ErrCodeNotExist, fmt.Sprintf("the code step with id %d does not exist,user %d", stepid, userid))))
 	}
@@ -176,6 +176,9 @@ func getPostCodeStep(r *http.Request, code_id string) *Code_step {
 	create_date := time.Now().Local().Format("2006-01-02 15:04:05 +0800")
 	codeId, err := strconv.Atoi(code_id)
 
+	if t.Status == 0 {
+		t.Status = 1
+	}
 	if err != nil {
 		return nil
 	}

@@ -36,6 +36,10 @@ func (_ jsonEncoder) Encode(v ...interface{}) (string, error) {
 	}
 	fmt.Println(data)
 	b, err := json.Marshal(data)
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
 	buffer := bytes.NewBuffer(b)
 
 	//将byte数组的内容转换成字符：{"Name":"Jim","Age":25}

@@ -22,6 +22,10 @@ import (
 // 	Image_id    int
 // }
 // The Code step data structure, serializable in JSON, XML and text using the Stringer interface.
+type Code_step_meta struct {
+	Meta Code_step       `json:"meta" xml:"meta"`
+	Cmds []Code_step_cmd `json:"cmds" xml:"cmds"`
+}
 type Code_step struct {
 	Id          int    `json:"id" xml:"id,attr"`
 	Create_date string `json:"create_date" xml:"create_date"`
@@ -40,12 +44,12 @@ type Code_detail struct {
 	Time         int    `json:time`
 }
 type Code_step_cmd struct {
-	Id         int    `json:id`
-	Seq        int    `json:seq`
-	Cmd        string `json:cmd`
-	Args       string `json:args`
-	Is_replace int    `json:is_replace`
-	Stepid     int    `json:stepid`
+	Id         int    `json:Id`
+	Seq        int    `json:Seq`
+	Cmd        string `json:Cmd`
+	Args       string `json:Args`
+	Is_replace int    `json:Is_replace`
+	Stepid     int    `json:Stepid`
 }
 
 func (a *Code_step) String() string {
@@ -58,7 +62,7 @@ type codeStepDB struct {
 
 //db interface
 type codeStepDB_inter interface {
-	Get(id int) Code_step
+	Get(id int) Code_step_meta
 	GetStepDetail(id int) Code_detail
 	Find(image_id int, code_id int, name string, status int) []Code_step
 	GetAll(id int) []Code_step
@@ -94,13 +98,21 @@ func (db *codeStepDB) Find(image_id int, code_id int, name string, status int) [
 	checkErr(err, "error in find")
 	return res
 }
-func (db *codeStepDB) Get(id int) Code_step {
-	var res Code_step
+func (db *codeStepDB) Get(id int) Code_step_meta {
+	var res Code_step_meta
+	var code_res Code_step
 	cmd := fmt.Sprintf("select * from code_step_meta where id=%d", id)
-	err := db.m.SelectOne(&res, cmd)
+	err := db.m.SelectOne(&code_res, cmd)
+	checkErr(err, cmd+" failed")
+	var cmds []Code_step_cmd
+	cmd = fmt.Sprintf("select * from code_step_cmd where stepid=%d", id)
+	_, err = db.m.Select(&cmds, cmd)
 	checkErr(err, cmd+" failed")
 
+	res.Meta = code_res
+	res.Cmds = cmds
 	log.Println("code step query:", id)
+	log.Println("query restult:", res)
 	return res
 }
 
@@ -164,6 +176,9 @@ func (db *codeStepDB) Update(a *Code_step) error {
 	}
 	if a.Code_name != "" {
 		log.Println("code_name: " + a.Code_name)
+		if flag == 0 {
+			cmd += ","
+		}
 		cmd += " code_name='" + a.Code_name + "'"
 		flag = 0
 	}
