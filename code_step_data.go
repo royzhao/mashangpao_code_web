@@ -29,6 +29,7 @@ type Code_step struct {
 	Description string `json:"description" xml:"description"`
 	Code_id     int    `json:"code_id" xml:"code_id"`
 	Image_id    int    `json:"image_id" xml:"image_id"`
+	Code_name   string `json:"code_name" xml:"code_name"`
 	Status      int    `json:"status" xml:"status"`
 }
 
@@ -159,6 +160,11 @@ func (db *codeStepDB) Update(a *Code_step) error {
 	if a.Name != "" {
 		log.Println("name: " + a.Name)
 		cmd += " name='" + a.Name + "'"
+		flag = 0
+	}
+	if a.Code_name != "" {
+		log.Println("code_name: " + a.Code_name)
+		cmd += " code_name='" + a.Code_name + "'"
 		flag = 0
 	}
 	if a.Description != "" {
