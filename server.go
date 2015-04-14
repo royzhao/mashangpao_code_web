@@ -19,6 +19,7 @@ func init() {
 	// //init database
 	dbmap := initDb()
 	dbmap.TraceOn("[gorp]", log.New(os.Stdout, "myapp:", log.Lmicroseconds))
+	log.Println("init db is successful!")
 	// initrundb()
 	//init code module
 	//init_code()
@@ -146,6 +147,7 @@ func main() {
 	//
 	// go run /path/to/goroot/src/pkg/crypto/tls/generate_cert.go --host="localhost"
 	//
+	log.Println("listening on 8001")
 	if err := http.ListenAndServe(":8001", m); err != nil {
 		log.Fatal(err)
 	}

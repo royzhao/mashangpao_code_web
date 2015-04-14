@@ -52,7 +52,7 @@ func GetCodeStepCmd(r *http.Request, enc Encoder, db codeStepDB_inter, parms mar
 // // Addcode creates the posted code step.
 func AddCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms martini.Params, db codeStepDB_inter) (int, string) {
 	codeid := parms["codeid"]
-	userid := parms["userid"]
+	// userid := parms["userid"]
 	al := getPostCodeStep(r, codeid)
 	id, err := db.Add(al)
 	switch err {
@@ -62,8 +62,12 @@ func AddCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms mart
 			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the code step '%s' from '%s' already exists", al.Name, al.Description))))
 	case nil:
 		// TODO : Location is expected to be an absolute URI, as per the RFC2616
-		w.Header().Set("Location", fmt.Sprintf("/code/%s/%d/%d", userid, codeid, id))
-		return http.StatusCreated, Must(enc.Encode(al))
+		res := db.Get(id)
+		if res.Meta.Id == 0 {
+			return http.StatusNotFound, Must(enc.Encode(
+				NewError(ErrCodeNotExist, fmt.Sprintf("create failed"))))
+		}
+		return http.StatusCreated, Must(enc.Encode(res))
 	default:
 		panic(err)
 	}
@@ -82,10 +86,10 @@ func UpdateCodeStepCmd(r *http.Request, enc Encoder, db codeStepDB_inter, parms 
 			NewError(ErrCodeNotExist, fmt.Sprintf("bad request"))))
 	}
 	err = db.UpdateCodeCmd(stepid, al)
-	al = db.GetCodeCmds(stepid)
+	res := db.Get(stepid)
 	switch err {
 	case nil:
-		return http.StatusOK, Must(enc.Encode(al))
+		return http.StatusOK, Must(enc.Encode(res))
 	default:
 		panic(err)
 	}

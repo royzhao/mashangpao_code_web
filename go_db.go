@@ -17,7 +17,7 @@ func initrundb() {
 func initDb() *gorp.DbMap {
 	// connect to db using standard Go database/sql API
 	// use whatever database/sql driver you wish
-	db, err := sql.Open("mysql", "admin:root@tcp(peilong.me:3306)/msp")
+	db, err := sql.Open("mysql", "root:root@tcp(vpn.peilong.me:3306)/msp")
 	checkErr(err, "sql.Open failed")
 
 	// construct a gorp DbMap
