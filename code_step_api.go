@@ -140,7 +140,7 @@ func GetCodeStepDetail(r *http.Request, enc Encoder, db codeStepDB_inter, parms 
 			NewError(ErrCodeNotExist, fmt.Sprintf("the Code step detail with id %s does not exist", parms["stepid"]))))
 	}
 	al := db.GetStepDetail(id)
-	if al.Id == 0 {
+	if al.Meta.Id == 0 {
 		return http.StatusNotFound, Must(enc.Encode(
 			NewError(ErrCodeNotExist, fmt.Sprintf("the Code step detail with id %s does not exist", parms["stepid"]))))
 	}
@@ -160,7 +160,7 @@ func UpdateCodeStepDetail(r *http.Request, enc Encoder, db codeStepDB_inter, par
 	switch err {
 	case ErrAlreadyExists:
 		return http.StatusConflict, Must(enc.Encode(
-			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the code step detail '%d' already exists", a.Id))))
+			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the code step detail '%d' already exists", a.Meta.Id))))
 	case nil:
 		return http.StatusOK, Must(enc.Encode(a))
 	default:

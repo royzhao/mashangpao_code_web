@@ -37,11 +37,15 @@ type Code_step struct {
 	Status      int    `json:"status" xml:"status"`
 	Work_dir    string `json:"work_dir" xml:"work_dir"`
 }
-
+type Code_all struct {
+	Meta Code_step       `json:"meta"`
+	Cmds []Code_step_cmd `json:"cmds"`
+	Code Code_detail     `json:"code"`
+}
 type Code_detail struct {
 	Id           int    `json:"id"`
-	Code_content string `json:"code"`
-	Post_content string `json:"post"`
+	Code_content string `json:"code_content"`
+	Post_content string `json:"post_content"`
 	Time         int    `json:time`
 }
 type Code_step_cmd struct {
@@ -64,7 +68,7 @@ type codeStepDB struct {
 //db interface
 type codeStepDB_inter interface {
 	Get(id int) Code_step_meta
-	GetStepDetail(id int) Code_detail
+	GetStepDetail(id int) Code_all
 	Find(image_id int, code_id int, name string, status int) []Code_step
 	GetAll(id int) []Code_step
 	Add(a *Code_step) (int, error)
@@ -117,14 +121,19 @@ func (db *codeStepDB) Get(id int) Code_step_meta {
 	return res
 }
 
-func (db *codeStepDB) GetStepDetail(id int) Code_detail {
+func (db *codeStepDB) GetStepDetail(id int) Code_all {
 	var res Code_detail
+	var ret Code_all
 	cmd := fmt.Sprintf("select * from code_step_detail where id=%d", id)
 	err := db.m.SelectOne(&res, cmd)
 	checkErr(err, cmd+" failed")
+	meta := db.Get(id)
+	ret.Cmds = meta.Cmds
+	ret.Meta = meta.Meta
+	ret.Code = res
 
 	log.Println("code step detail query:", id)
-	return res
+	return ret
 }
 
 func (db *codeStepDB) GetAll(id int) []Code_step {

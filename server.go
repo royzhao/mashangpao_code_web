@@ -45,11 +45,11 @@ func init() {
 	//得到所有的代码
 	r.Get(`/api/code`, GetCodes)
 	//得到某一个用户的所有代码
-	r.Get(`/api/code/:userid`, GetCodesByUser)
+	r.Get(`/api/user/code/:userid`, GetCodesByUser)
 	//一个用户增加一个代码
-	r.Post(`/api/code/:userid`, AddCode)
+	r.Post(`/api/uesr/code/:userid`, AddCode)
 	//查询一个指定的代码
-	r.Get(`/api/code/:userid/:codeid`, GetCode)
+	r.Get(`/api/code/:codeid`, GetCode)
 	//修改指定的代码
 	r.Put(`/api/code/:userid/:codeid`, UpdateCode)
 	//删除指定的代码
@@ -57,9 +57,9 @@ func init() {
 
 	//得到代码的具体步骤
 	//得到全部的代码步骤元数据
-	r.Get(`/api/code/:userid/:codeid/step`, GetCodeSteps)
+	r.Get(`/api/code/:codeid/step`, GetCodeSteps)
 	//得到某一个具体步骤
-	r.Get(`/api/code/:userid/:codeid/step/:stepid`, GetCodeStep)
+	r.Get(`/api/code/:codeid/step/:stepid`, GetCodeStep)
 	//增加一个代码的具体步骤
 	r.Post(`/api/code/:userid/:codeid/step`, AddCodeStep)
 	//修改置顶的代码步骤的元数据
@@ -68,13 +68,13 @@ func init() {
 	r.Delete(`/api/code/:userid/:codeid/step/:stepid`, DeleteCodeStep)
 
 	//具体内容操作
-	r.Get(`/api/code/:userid/:codeid/step/:stepid/detail`, GetCodeStepDetail)
+	r.Get(`/api/code/:codeid/step/:stepid/detail`, GetCodeStepDetail)
 	//修改具体内容
 	r.Put(`/api/code/:userid/:codeid/step/:stepid/detail`, UpdateCodeStepDetail)
 
 	//add command
 	r.Put(`/api/code/:userid/:codeid/step/:stepid/cmd`, UpdateCodeStepCmd)
-	r.Get(`/api/code/:userid/:codeid/step/:stepid/cmd`, GetCodeStepCmd)
+	r.Get(`/api/code/:codeid/step/:stepid/cmd`, GetCodeStepCmd)
 
 	//code run
 	r.Put(`/api/coderun/:imageid`, RunCodeStep)

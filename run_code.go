@@ -9,7 +9,7 @@ import (
 )
 
 type Run_code struct {
-	Code string
+	Code Code_detail
 	Meta Code_step_meta
 	Cmds []Code_step_cmd
 }
@@ -47,7 +47,7 @@ func RunCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms mart
 	for _, v := range t.Cmds {
 		cmdstr += v.Cmd + v.Args
 	}
-	cmdstr += t.Code
+	cmdstr += t.Code.Code_content
 	cmdstr += imageid
 	//compute md5 as id
 	id := GetMd5String(cmdstr)
