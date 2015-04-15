@@ -9,13 +9,14 @@ import (
 )
 
 type Run_code struct {
-	Code    string
-	Imageid int
-	compile bool
+	Code string
+	Meta Code_step_meta
+	Cmds []Code_step_cmd
 }
 type Run_res struct {
-	Res    string
-	Run_id string
+	Res    string `json:"res"`
+	Status int    `json:"status"`
+	Run_id string `json:"run_id"`
 }
 
 func GetRunResult(w http.ResponseWriter, r *http.Request, enc Encoder, parms martini.Params, db codeStepDB_inter) (int, string) {
@@ -23,9 +24,11 @@ func GetRunResult(w http.ResponseWriter, r *http.Request, enc Encoder, parms mar
 
 	//mock rpc
 	log.Println("query cache use ", runid)
-
+	status, code_res := GetValue(runid)
 	res := Run_res{
-		Res: "hehe",
+		Res:    code_res,
+		Status: status,
+		Run_id: runid,
 	}
 	return http.StatusOK, Must(enc.Encode(res))
 }
@@ -40,10 +43,19 @@ func RunCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms mart
 	}
 	log.Println(t)
 	log.Println("imageid", imageid)
+	cmdstr := ""
+	for _, v := range t.Cmds {
+		cmdstr += v.Cmd + v.Args
+	}
+	cmdstr += t.Code
+	cmdstr += imageid
 	//compute md5 as id
-	id := "dsdasdadasd"
+	id := GetMd5String(cmdstr)
+	status, code_run_res := GetValue(id)
 	res := Run_res{
 		Run_id: id,
+		Res:    code_run_res,
+		Status: status,
 	}
 	// if al.Id == 0 {
 	// 	return http.StatusNotFound, Must(enc.Encode(

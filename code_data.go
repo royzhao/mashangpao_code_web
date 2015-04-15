@@ -143,8 +143,6 @@ func (db *codeDB) Get(id int) Code {
 
 // Add creates a new album and returns its id, or an error.
 func (db *codeDB) Add(a *Code) (int, error) {
-	db.Lock()
-	defer db.Unlock()
 	// Return an error if band-title already exists
 	if !db.isUnique(a) {
 		return 0, ErrAlreadyExists

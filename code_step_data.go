@@ -35,6 +35,7 @@ type Code_step struct {
 	Image_id    int    `json:"image_id" xml:"image_id"`
 	Code_name   string `json:"code_name" xml:"code_name"`
 	Status      int    `json:"status" xml:"status"`
+	Work_dir    string `json:"work_dir" xml:"work_dir"`
 }
 
 type Code_detail struct {
@@ -72,7 +73,7 @@ type codeStepDB_inter interface {
 	UpdateStepDetail(a *Code_detail) error
 	UpdateCodeCmd(stepid int, a []Code_step_cmd) error
 	GetCodeCmds(stepid int) []Code_step_cmd
-	GetCodeCmdBySeq(stepid int, seqid int) *Code_step_cmd
+	GetCodeCmdBySeq(stepid int, seqid int) []Code_step_cmd
 	DeleteCodeCmd(stepid int, seqid int) error
 	Delete(id int)
 }
@@ -149,6 +150,7 @@ func (db *codeStepDB) Add(a *Code_step) (int, error) {
 	}
 	checkErr(err, "insert failed")
 	_, err = db.m.Exec("insert into `code_step_detail` (`Id`,`Code_content`,`Post_content`,`Time`) values (?,'','',0)", a.Id)
+	_, err = db.m.Exec("insert into `code_step_cmd` (`Stepid`,`Cmd`,`Args`,`Is_replace`,`Seq`) values(?,'','',1,1)", a.Id)
 	return a.Id, nil
 	// trans, err := db.m.Begin()
 	// if err != nil {
@@ -190,6 +192,14 @@ func (db *codeStepDB) Update(a *Code_step) error {
 		cmd += " description='" + a.Description + "'"
 		flag = 0
 	}
+	if a.Work_dir != "" {
+		log.Println("work_dir: " + a.Work_dir)
+		if flag == 0 {
+			cmd += ","
+		}
+		cmd += " work_dir='" + a.Work_dir + "'"
+		flag = 0
+	}
 	if a.Image_id != 0 {
 		if flag == 0 {
 			cmd += ","
@@ -220,35 +230,37 @@ func (db *codeStepDB) GetCodeCmds(stepid int) []Code_step_cmd {
 	checkErr(err, "error in get all cmd")
 	return res
 }
-func (db *codeStepDB) GetCodeCmdBySeq(stepid int, seqid int) *Code_step_cmd {
-	var res Code_step_cmd
+func (db *codeStepDB) GetCodeCmdBySeq(stepid int, seqid int) []Code_step_cmd {
+	var res []Code_step_cmd
 	cmd := fmt.Sprintf("select * from code_step_cmd where stepid=%d and seq=%d", stepid, seqid)
 	_, err := db.m.Select(&res, cmd)
 	checkErr(err, "error in get one cmd")
-	return &res
+	return res
 }
 func (db *codeStepDB) UpdateCodeCmd(stepid int, a []Code_step_cmd) error {
 	for _, v := range a {
 		tmp := db.GetCodeCmdBySeq(stepid, v.Seq)
-		if tmp.Stepid != 0 && tmp.Seq != 0 {
+		log.Println(len(tmp))
+		// if tmp.Stepid != 0 && tmp.Seq != 0 {
+		if len(tmp) > 0 {
 			cmd := "update code_step_cmd set"
 			flag := 1
 			if v.Cmd != "" {
-				cmd += " cmd=" + v.Cmd
+				cmd += " cmd='" + v.Cmd + "'"
 				flag = 0
 			}
 			if v.Args != "" {
 				if flag == 0 {
 					cmd += ","
 				}
-				cmd += " args=" + v.Args
+				cmd += " args='" + v.Args + "'"
 				flag = 0
 			}
 			if v.Is_replace != 0 {
 				if flag == 0 {
 					cmd += ","
 				}
-				cmd += fmt.Sprint("is_replace=%d", v.Is_replace)
+				cmd = fmt.Sprintf("%s is_replace=%d", cmd, v.Is_replace)
 				flag = 0
 			}
 			if flag == 0 {
@@ -268,10 +280,10 @@ func (db *codeStepDB) UpdateCodeCmd(stepid int, a []Code_step_cmd) error {
 
 func (db *codeStepDB) DeleteCodeCmd(stepid int, seqid int) error {
 	tmp := db.GetCodeCmdBySeq(stepid, seqid)
-	if tmp == nil {
+	if tmp == nil || len(tmp) == 0 {
 		return nil
 	}
-	count, err := db.m.Delete(tmp)
+	count, err := db.m.Delete(tmp[0])
 	checkErr(err, "Delete failed")
 	log.Println("Code Row deleted:", count)
 	return err

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/codegangsta/martini"
+	"github.com/hoisie/redis"
 	"log"
 	"net/http"
 	"os"
@@ -13,8 +14,14 @@ import (
 
 // 只有一个martini实例
 var m *martini.Martini
+var redis_client redis.Client
 
 func init() {
+	redis_addr := os.Getenv("REDIS_ADDR")
+	log.Println("redis addr is:" + redis_addr)
+	if redis_addr == "" {
+		redis_addr = "127.0.01:6379"
+	}
 	// dbmap = nil
 	// //init database
 	dbmap := initDb()
@@ -70,8 +77,8 @@ func init() {
 	r.Get(`/api/code/:userid/:codeid/step/:stepid/cmd`, GetCodeStepCmd)
 
 	//code run
-	r.Put(`/api/code/run/:imageid`, RunCodeStep)
-	r.Get(`/api/code/run/:runid`, GetRunResult)
+	r.Put(`/api/coderun/:imageid`, RunCodeStep)
+	r.Get(`/api/coderun/:runid`, GetRunResult)
 
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))
