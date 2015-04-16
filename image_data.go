@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"gopkg.in/gorp.v1"
 	"log"
 	"strings"
@@ -208,23 +207,25 @@ func (c CRImage) UpdateFork(uid int64, uname string) error {
 		trans.Rollback()
 		return err
 	}
-	_, err := trans.Exec("update cr_image set Fork = Fork + 1 WHERE Image_id = ? ", c.ImageId)
+	_, err = trans.Exec("update cr_image set Fork = Fork + 1 WHERE Image_id = ? ", c.ImageId)
 	if err != nil {
 		trans.Rollback()
 		return err
 	}
 	oldName := strings.Split(c.ImageName, "-")
 	newName := uname + "-" + oldName[1]
+	log.Println(newName)
 
 	//	ni := newImage()
 
-	_, err := dbmap.Update(&c)
+	_, err = dbmap.Update(&c)
 	if err != nil {
 		log.Println("Update failed", err)
-		return
+		return err
 	}
 	err = dbmap.Insert(&cf)
 	checkErr(err, "Insert failed")
+	return nil
 }
 
 func (c CRStar) QueryStar() int64 {
@@ -238,13 +239,14 @@ func (c CRStar) QueryStar() int64 {
 	return cs.StarId
 }
 
-func init_imangeDb(db *gorp.DbMap){
+func init_imangeDb(db *gorp.DbMap) {
 	db.AddTableWithName(CRImage{}, "cr_image").SetKeys(true, "ImageId")
 	db.AddTableWithName(CRComments{}, "cr_comment").SetKeys(true, "CommentId")
 	db.AddTableWithName(CRStar{}, "cr_star").SetKeys(true, "StarId")
 	db.AddTableWithName(CRFork{}, "cr_fork").SetKeys(true, "ForkId")
 
 }
+
 /*
 func checkErr(err error, msg string) {
 	if err != nil {

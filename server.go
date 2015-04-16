@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/codegangsta/martini"
 	"github.com/hoisie/redis"
 	"log"
@@ -8,19 +9,16 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	"flag"
-
 	//	"github.com/codegangsta/martini-contrib/auth"
 )
 
 var (
-	addr   = flag.String("p", ":9000", "Address and port to serve dockerui")
+	addr  = flag.String("p", ":9000", "Address and port to serve dockerui")
 	dbmap = initDb()
 
 	// 只有一个martini实例
-	m *martini.Martini
+	m            *martini.Martini
 	redis_client redis.Client
-
 )
 
 func init() {
@@ -29,6 +27,7 @@ func init() {
 	if redis_addr == "" {
 		redis_addr = "127.0.01:6379"
 	}
+	redis_client.Addr = redis_addr
 	// dbmap = nil
 	// //init database
 	dbmap := initDb()
@@ -37,9 +36,7 @@ func init() {
 	// initrundb()
 	//init code module
 	//init_code()
-	init_code(dbmap)
-	init_codestep(dbmap)
-	init_imangeDb(dbmap)
+
 	m = martini.New()
 	// Setup middleware
 	m.Use(martini.Recovery())
@@ -87,14 +84,13 @@ func init() {
 	//code run
 	r.Put(`/api/coderun/:imageid`, RunCodeStep)
 	r.Get(`/api/coderun/:runid`, GetRunResult)
-	
-	
+
 	//image api
-	r.Get("/dockerapi/image/{id}/name", getImageName)
+	r.Get("/dockerapi/image/:id/name", getImageName)
 	r.Get("/dockerapi/images", listImages)
-	r.Get("/dockerapi/images/{id}/list", listMyImages)
-	r.Get("/dockerapi/images/{id}/log", imageLogs)
-	r.Get("/dockerapi/images/{name}/verify", imageVerify)
+	r.Get("/dockerapi/images/:id/list", listMyImages)
+	r.Get("/dockerapi/images/:id/log", imageLogs)
+	r.Get("/dockerapi/images/:name/verify", imageVerify)
 	//r.Delete("/dockerapi/images/{id}/delete", deleteImage)
 	r.Post("/dockerapi/image/create", createImage)
 	r.Post("/dockerapi/image/commit", commitImage)
@@ -102,7 +98,7 @@ func init() {
 	r.Post("/dockerapi/image/edit", editImage)
 	r.Post("/dockerapi/image/star", starImage)
 	r.Post("/dockerapi/image/fork", forkImage)
-	r.Get("/dockerapi/star/{uid}/{id}", queryStarid)
+	r.Get("/dockerapi/star/:uid/:id", queryStarid)
 
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))

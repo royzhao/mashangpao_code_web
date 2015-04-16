@@ -2,30 +2,30 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
-	"log"
+	"github.com/Sirupsen/logrus"
+	"github.com/codegangsta/martini"
 	"net/http"
 	"strconv"
-
-	"github.com/Sirupsen/logrus"
-	"github.com/codegangsta/negroni"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/gorilla/mux"
 )
+
 var logger = logrus.New()
 
-func listImages(w http.ResponseWriter, r *http.Request) {
+func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
+	logger.Println("enter list images")
 	images := QueryImage()
 	if err := json.NewEncoder(w).Encode(images); err != nil {
 		logger.Error(err)
 	}
 }
 
-func listMyImages(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	uid, _ := strconv.ParseInt(vars["id"], 10, 64)
+func listMyImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
+	logger.Println("enter list my images")
+
+	uid, _ := strconv.ParseInt(parms["id"], 10, 64)
 	var i CRImage
+	logger.Println(uid)
 	image := i.QuerybyUser(uid)
+	logger.Println(image)
 	if err := json.NewEncoder(w).Encode(image); err != nil {
 		logger.Error(err)
 	}
@@ -35,9 +35,8 @@ type imageFullName struct {
 	fullname string
 }
 
-func getImageName(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, _ := strconv.ParseInt(vars["id"], 10, 64)
+func getImageName(w http.ResponseWriter, r *http.Request, parms martini.Params) {
+	id, _ := strconv.ParseInt(parms["id"], 10, 64)
 	var img CRImage
 	image := img.Querylog(id)
 	name := image.ImageName + ":" + strconv.Itoa(image.Tag)
@@ -47,9 +46,8 @@ func getImageName(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func imageLogs(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, _ := strconv.ParseInt(vars["id"], 10, 64)
+func imageLogs(w http.ResponseWriter, r *http.Request, parms martini.Params) {
+	id, _ := strconv.ParseInt(parms["id"], 10, 64)
 	var img CRImage
 	image := img.Querylog(id)
 	if err := json.NewEncoder(w).Encode(*image); err != nil {
@@ -61,9 +59,8 @@ type unique struct {
 	IsUnique bool
 }
 
-func imageVerify(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["name"]
+func imageVerify(w http.ResponseWriter, r *http.Request, parms martini.Params) {
+	name := parms["name"]
 	isUnique := QueryVerify(name)
 	if err := json.NewEncoder(w).Encode(unique{IsUnique: isUnique}); err != nil {
 		logger.Error(err)
@@ -207,10 +204,9 @@ type starID struct {
 	ID int64
 }
 
-func queryStarid(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, _ := strconv.ParseInt(vars["id"], 10, 64)
-	uid, _ := strconv.ParseInt(vars["uid"], 10, 64)
+func queryStarid(w http.ResponseWriter, r *http.Request, parms martini.Params) {
+	id, _ := strconv.ParseInt(parms["id"], 10, 64)
+	uid, _ := strconv.ParseInt(parms["uid"], 10, 64)
 	cs := CRStar{ImageId: id, UserId: uid}
 	sid := cs.QueryStar()
 	if err := json.NewEncoder(w).Encode(starID{ID: sid}); err != nil {
@@ -223,7 +219,7 @@ func queryStarid(w http.ResponseWriter, r *http.Request) {
 //}
 
 func forkImage(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	id := r.FormValue("uid")
-	uid, _ := strconv.ParseInt(vars["uid"], 10, 64)
+	// r.ParseForm()
+	// id := r.FormValue("uid")
+	// uid, _ := strconv.ParseInt(vars["uid"], 10, 64)
 }

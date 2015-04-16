@@ -340,5 +340,5 @@ func init_codestep(db *gorp.DbMap) {
 
 	db.AddTableWithName(Code_step{}, "code_step_meta").SetKeys(true, "Id")
 	db.AddTableWithName(Code_detail{}, "code_step_detail").SetKeys(true, "Id")
-	db.AddTableWithName(Code_step_cmd{}, "code_step_cmd").SetKeys(true, "Id")
+	db.AddTableWithName(Code_step_cmd{}, "code_step_cmd").SetKeys(false, "Id")
 }
