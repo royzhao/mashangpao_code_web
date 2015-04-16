@@ -74,6 +74,10 @@ func newImage(uid int64, imgname string, tag int, des string) CRImage {
 
 //insert a new record into cr_image table
 func (c CRImage) Add() error {
+	count, err := dbmap.SelectInt("select count(1) from cr_image where Image_name = ?", c.ImageName)
+	if count > 0 || err != nil {
+		return err
+	}
 	err := dbmap.Insert(&c)
 	return err
 }
@@ -134,7 +138,7 @@ func (c CRImage) UpdateImage() error {
 	return err
 }
 
-//update the star list of an image, if star is true, insert a new star record, else delete the original record
+//update the star list of an image
 func (c CRImage) UpdateStar() error {
 	//	if _, err := dbmap.Update(&c); err != nil {
 	//		log.Println("Update image log failed", err)
@@ -145,10 +149,12 @@ func (c CRImage) UpdateStar() error {
 	if err != nil {
 		return err
 	}
+	//查询是否存在star记录
 	count, err := trans.SelectInt("select count(1) from cr_star where user_id = ? and image_id = ?", c.UserId, c.ImageId)
 	if err != nil {
 		return err
 	}
+	//如果存在则查出那条记录
 	if count > 0 {
 		star = false
 		err = trans.SelectOne(&cs, "select * from cr_star where user_id = ? and image_id = ?", c.UserId, c.ImageId)
@@ -157,6 +163,7 @@ func (c CRImage) UpdateStar() error {
 			return err
 		}
 	}
+	//如果不存在记录，则插入一条，并使star数加一
 	if star {
 		//		err = dbmap.Insert(&cs)
 		cs = CRStar{UserId: c.UserId, ImageId: c.ImageId}
@@ -172,7 +179,7 @@ func (c CRImage) UpdateStar() error {
 			return err
 		}
 	} else {
-		//		_, err = dbmap.Delete(&cs)
+		//如果存在则将该记录删除，并使star数减一
 		if _, err := trans.Delete(&cs); err != nil {
 			trans.Rollback()
 			return err
@@ -183,48 +190,57 @@ func (c CRImage) UpdateStar() error {
 			return err
 		}
 	}
-	trans.Commit()
+	err = trans.Commit()
+	if err != nil {
+		trans.Rollback()
+		return err
+	}
 	return nil
 }
 
 //insert a fork record of an image
 func (c CRImage) UpdateFork(uid int64, uname string) error {
 	var cf CRFork
+	//事务开始
 	trans, err := dbmap.Begin()
 	if err != nil {
 		return err
 	}
+	//检查是否存在该fork记录
 	count, err := trans.SelectInt("select count(1) from cr_fork where user_id = ? and image_id = ?", c.UserId, c.ImageId)
 	if err != nil {
 		return err
 	}
+	//存在则推出
 	if count > 0 {
 		trans.Rollback()
 		return err
 	}
+	//不存在，先插入一条cr_fork表记录
 	cf = CRFork{UserId: c.UserId, ImageId: c.ImageId}
 	if err := trans.Insert(&cf); err != nil {
 		trans.Rollback()
 		return err
 	}
+	//镜像fork数量加一
 	_, err = trans.Exec("update cr_image set Fork = Fork + 1 WHERE Image_id = ? ", c.ImageId)
 	if err != nil {
 		trans.Rollback()
 		return err
 	}
+	//获得新镜像名称，并插入新镜像记录
 	oldName := strings.Split(c.ImageName, "-")
 	newName := uname + "-" + oldName[1]
-	log.Println(newName)
+	ni := newImage(uid, newName, 1, c.Descrip)
+	err = trans.Insert(&ni)
+	if err != nil {
+		trans.Rollback()
+		return err
+	}
+	trans.Commit()
 
 	//	ni := newImage()
 
-	_, err = dbmap.Update(&c)
-	if err != nil {
-		log.Println("Update failed", err)
-		return err
-	}
-	err = dbmap.Insert(&cf)
-	checkErr(err, "Insert failed")
 	return nil
 }
 

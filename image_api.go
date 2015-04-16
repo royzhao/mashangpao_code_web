@@ -10,6 +10,7 @@ import (
 
 var logger = logrus.New()
 
+//list all the images
 func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	logger.Println("enter list images")
 	images := QueryImage()
@@ -18,6 +19,7 @@ func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	}
 }
 
+//list a user's images
 func listMyImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	logger.Println("enter list my images")
 
@@ -35,6 +37,7 @@ type imageFullName struct {
 	fullname string
 }
 
+//get an image name from its id
 func getImageName(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	id, _ := strconv.ParseInt(parms["id"], 10, 64)
 	var img CRImage
@@ -46,6 +49,7 @@ func getImageName(w http.ResponseWriter, r *http.Request, parms martini.Params) 
 	}
 }
 
+//get an image's log
 func imageLogs(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	id, _ := strconv.ParseInt(parms["id"], 10, 64)
 	var img CRImage
@@ -59,6 +63,7 @@ type unique struct {
 	IsUnique bool
 }
 
+//verify if the image name exists
 func imageVerify(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	name := parms["name"]
 	isUnique := QueryVerify(name)
@@ -67,10 +72,10 @@ func imageVerify(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	}
 }
 
-func deleteImage(w http.ResponseWriter, r *http.Request) {
-	//	vars := mux.Vars(r)
-	//	id, _ := strconv.ParseInt(vars["id"], 10, 64)
-}
+//func deleteImage(w http.ResponseWriter, r *http.Request) {
+//	//	vars := mux.Vars(r)
+//	//	id, _ := strconv.ParseInt(vars["id"], 10, 64)
+//}
 
 type newimage struct {
 	UserId    int64
@@ -84,6 +89,7 @@ type baseImage struct {
 	Bimage string
 }
 
+//create a new image from base image
 func createImage(w http.ResponseWriter, r *http.Request) {
 	//	vars := mux.Vars(r)
 	//	id, _ := strconv.ParseInt(vars["id"], 10, 64)
@@ -111,6 +117,7 @@ type myImageID struct {
 	ID int64
 }
 
+//commit a new image
 func commitImage(w http.ResponseWriter, r *http.Request) {
 	//	var ni newimage
 	var ci CRImage
@@ -133,6 +140,7 @@ func commitImage(w http.ResponseWriter, r *http.Request) {
 	//	}
 }
 
+//edit an exist image
 func editImage(w http.ResponseWriter, r *http.Request) {
 	//	vars := mux.Vars(r)
 	//	id, _ := strconv.ParseInt(vars["id"], 10, 64)
@@ -151,6 +159,7 @@ func editImage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+//push an a new image to the private registry
 func pushImage(w http.ResponseWriter, r *http.Request) {
 	var ci CRImage
 	if err := json.NewDecoder(r.Body).Decode(&ci); err != nil {
@@ -165,6 +174,7 @@ func pushImage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//star or unstar a image
 func starImage(w http.ResponseWriter, r *http.Request) {
 	//	r.ParseForm()
 	//	starStr := r.FormValue("sbool")
@@ -179,31 +189,19 @@ func starImage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	//	var cs CRStar
-	//	if star {
-	//		cs = CRStar{ImageId: cr.ImageId, UserId: cr.UserId}
-	//		//		sid, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
-	//		//		cs = CRStar{StarId: sid, ImageId: cr.ImageId, UserId: cr.UserId}
-	//	} else {
-	//		sid, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
-	//		cs = CRStar{StarId: sid, ImageId: cr.ImageId, UserId: cr.UserId}
-	//	}
-	//	log.Println(cr)
 	err := cr.UpdateStar()
 	if err != nil {
 		logger.Warnf("error staring image: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	//	log.Println(cs)
-	//	cs := CRStar{id, uid}
-	//	UpdateStar(cs, true)
 }
 
 type starID struct {
 	ID int64
 }
 
+//query the star record
 func queryStarid(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	id, _ := strconv.ParseInt(parms["id"], 10, 64)
 	uid, _ := strconv.ParseInt(parms["uid"], 10, 64)
@@ -218,6 +216,7 @@ func queryStarid(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 
 //}
 
+//fork an exist image
 func forkImage(w http.ResponseWriter, r *http.Request) {
 	// r.ParseForm()
 	// id := r.FormValue("uid")
