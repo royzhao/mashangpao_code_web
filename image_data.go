@@ -237,11 +237,9 @@ func (c CRImage) UpdateFork(uid int64, uname string) error {
 		trans.Rollback()
 		return err
 	}
-	trans.Commit()
+	err = trans.Commit()
 
-	//	ni := newImage()
-
-	return nil
+	return err
 }
 
 func (c CRStar) QueryStar() int64 {
@@ -253,6 +251,18 @@ func (c CRStar) QueryStar() int64 {
 		return 0
 	}
 	return cs.StarId
+}
+
+func (c CRFork) QueryFork() bool {
+	count, err := dbmap.SelectInt("select count(1) from cr_fork where user_id = ? and image_id = ?", c.UserId, c.ImageId)
+	if err != nil {
+		log.Println("Query starlog failed", err)
+		return true
+	}
+	if count > 0 {
+		return true
+	}
+	return false
 }
 
 func init_imangeDb(db *gorp.DbMap) {

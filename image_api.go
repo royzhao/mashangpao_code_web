@@ -16,6 +16,7 @@ func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	images := QueryImage()
 	if err := json.NewEncoder(w).Encode(images); err != nil {
 		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -30,6 +31,7 @@ func listMyImages(w http.ResponseWriter, r *http.Request, parms martini.Params) 
 	logger.Println(image)
 	if err := json.NewEncoder(w).Encode(image); err != nil {
 		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -46,6 +48,7 @@ func getImageName(w http.ResponseWriter, r *http.Request, parms martini.Params) 
 	fullName := imageFullName{fullname: name}
 	if err := json.NewEncoder(w).Encode(fullName); err != nil {
 		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -56,6 +59,7 @@ func imageLogs(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	image := img.Querylog(id)
 	if err := json.NewEncoder(w).Encode(*image); err != nil {
 		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -69,6 +73,7 @@ func imageVerify(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	isUnique := QueryVerify(name)
 	if err := json.NewEncoder(w).Encode(unique{IsUnique: isUnique}); err != nil {
 		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -110,6 +115,7 @@ func createImage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(bi); err != nil {
 		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -172,6 +178,8 @@ func pushImage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 }
 
 //star or unstar a image
@@ -195,6 +203,8 @@ func starImage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 }
 
 type starID struct {
@@ -209,16 +219,41 @@ func queryStarid(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	sid := cs.QueryStar()
 	if err := json.NewEncoder(w).Encode(starID{ID: sid}); err != nil {
 		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-//func unstarImage(w http.ResponseWriter, r *http.Request) {
-
-//}
-
 //fork an exist image
 func forkImage(w http.ResponseWriter, r *http.Request) {
-	// r.ParseForm()
-	// id := r.FormValue("uid")
-	// uid, _ := strconv.ParseInt(vars["uid"], 10, 64)
+	uid, _ := strconv.ParseInt(parms["uid"], 10, 64)
+	uname, _ := parms["uname"]
+	var cr CRImage
+	if err := json.NewDecoder(r.Body).Decode(&cr); err != nil {
+		logger.Warnf("error decoding image: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err := cr.UpdateFork(uid, uname)
+	if err != nil {
+		logger.Warnf("error forking image: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+}
+
+type forked struct {
+	Forked bool
+}
+
+func queryFork(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.ParseInt(parms["id"], 10, 64)
+	uid, _ := strconv.ParseInt(parms["uid"], 10, 64)
+	cf := CRFork{ImageId: id, UserId: uid}
+	fork := cf.QueryFork()
+	if err := json.NewEncoder(w).Encode(forked{Forked: fork}); err != nil {
+		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
