@@ -78,7 +78,7 @@ func (c CRImage) Add() error {
 	if count > 0 || err != nil {
 		return err
 	}
-	err := dbmap.Insert(&c)
+	err = dbmap.Insert(&c)
 	return err
 }
 
