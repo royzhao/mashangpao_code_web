@@ -34,6 +34,9 @@ func initDb() *gorp.DbMap {
 
 	return dbmap
 }
+
+
+
 func checkErr(err error, msg string) bool {
 	if err != nil {
 		// log.Fatalln(msg, err)

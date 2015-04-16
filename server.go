@@ -8,13 +8,20 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"flag"
 
 	//	"github.com/codegangsta/martini-contrib/auth"
 )
 
-// 只有一个martini实例
-var m *martini.Martini
-var redis_client redis.Client
+var (
+	addr   = flag.String("p", ":9000", "Address and port to serve dockerui")
+	dbmap = initDb()
+
+	// 只有一个martini实例
+	m *martini.Martini
+	redis_client redis.Client
+
+)
 
 func init() {
 	redis_addr := os.Getenv("REDIS_ADDR")
@@ -32,6 +39,7 @@ func init() {
 	//init_code()
 	init_code(dbmap)
 	init_codestep(dbmap)
+	init_imangeDb(dbmap)
 	m = martini.New()
 	// Setup middleware
 	m.Use(martini.Recovery())
@@ -79,6 +87,22 @@ func init() {
 	//code run
 	r.Put(`/api/coderun/:imageid`, RunCodeStep)
 	r.Get(`/api/coderun/:runid`, GetRunResult)
+	
+	
+	//image api
+	r.Get("/dockerapi/image/{id}/name", getImageName)
+	r.Get("/dockerapi/images", listImages)
+	r.Get("/dockerapi/images/{id}/list", listMyImages)
+	r.Get("/dockerapi/images/{id}/log", imageLogs)
+	r.Get("/dockerapi/images/{name}/verify", imageVerify)
+	//r.Delete("/dockerapi/images/{id}/delete", deleteImage)
+	r.Post("/dockerapi/image/create", createImage)
+	r.Post("/dockerapi/image/commit", commitImage)
+	r.Post("/dockerapi/image/push", pushImage)
+	r.Post("/dockerapi/image/edit", editImage)
+	r.Post("/dockerapi/image/star", starImage)
+	r.Post("/dockerapi/image/fork", forkImage)
+	r.Get("/dockerapi/star/{uid}/{id}", queryStarid)
 
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))
@@ -154,8 +178,10 @@ func main() {
 	//
 	// go run /path/to/goroot/src/pkg/crypto/tls/generate_cert.go --host="localhost"
 	//
+	flag.Parse()
+	defer dbmap.Db.Close()
 	log.Println("listening on 8001")
-	if err := http.ListenAndServe(":8001", m); err != nil {
+	if err := http.ListenAndServe(*addr, m); err != nil {
 		log.Fatal(err)
 	}
 
