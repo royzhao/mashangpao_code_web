@@ -99,6 +99,7 @@ func init() {
 	r.Post("/dockerapi/image/star", starImage)
 	r.Post("/dockerapi/image/fork", forkImage)
 	r.Get("/dockerapi/star/:uid/:id", queryStarid)
+	r.Get("/dockerapi/fork/:uid/:id", queryFork)
 
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))
