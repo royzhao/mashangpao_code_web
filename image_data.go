@@ -238,8 +238,11 @@ func (c CRImage) UpdateFork(uid int64, uname string) error {
 		return err
 	}
 	err = trans.Commit()
-
-	return err
+	if err != nil {
+		trans.Rollback()
+		return err
+	}
+	return nil
 }
 
 func (c CRStar) QueryStar() int64 {

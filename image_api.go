@@ -223,17 +223,24 @@ func queryStarid(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	}
 }
 
+//the parameter of fork image function
+type forkData struct {
+	Uid   int64
+	Uname string
+	Image CRImage
+}
+
 //fork an exist image
 func forkImage(w http.ResponseWriter, r *http.Request) {
-	uid, _ := strconv.ParseInt(parms["uid"], 10, 64)
-	uname, _ := parms["uname"]
-	var cr CRImage
-	if err := json.NewDecoder(r.Body).Decode(&cr); err != nil {
+	//	uid, _ := strconv.ParseInt(parms["uid"], 10, 64)
+	//	uname, _ := parms["uname"]
+	var data forkData
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		logger.Warnf("error decoding image: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err := cr.UpdateFork(uid, uname)
+	err := data.Image.UpdateFork(data.Uid, data.Uname)
 	if err != nil {
 		logger.Warnf("error forking image: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -247,7 +254,7 @@ type forked struct {
 	Forked bool
 }
 
-func queryFork(w http.ResponseWriter, r *http.Request) {
+func queryFork(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	id, _ := strconv.ParseInt(parms["id"], 10, 64)
 	uid, _ := strconv.ParseInt(parms["uid"], 10, 64)
 	cf := CRFork{ImageId: id, UserId: uid}
