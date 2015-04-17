@@ -12,7 +12,6 @@ var logger = logrus.New()
 
 //list all the images
 func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
-	logger.Println("enter list images")
 	images := QueryImage()
 	if err := json.NewEncoder(w).Encode(images); err != nil {
 		logger.Error(err)
@@ -22,8 +21,6 @@ func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 
 //list a user's images
 func listMyImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
-	logger.Println("enter list my images")
-
 	uid, _ := strconv.ParseInt(parms["id"], 10, 64)
 	var i CRImage
 	logger.Println(uid)
