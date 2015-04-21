@@ -135,6 +135,7 @@ func (c CRImage) DeleteImg() {
 
 //set the status of image
 func (c CRImage) UpdateStatus(status int8) error {
+	log.Println(c.ImageName)
 	_, err := dbmap.Exec("update cr_image set Status = ? WHERE Image_name = ? ", status, c.ImageName)
 	return err
 }
