@@ -12,9 +12,11 @@ import (
 
 var (
 	//	endpoint        = "unix:///var/run/docker.sock"
-	endpoint        = "http://imagehub.peilong.me:81"
+	endpoint = "http://imagehub.peilong.me:81"
+
 	dockerclient, _ = docker.NewClient(endpoint)
 	browserEndpoint = "http://vpn.peilong.me:8080"
+	dockerhub       = "docker2.peilong.me:5000"
 )
 
 type DockerContainerID struct {
@@ -24,6 +26,7 @@ type DockerContainerID struct {
 func (c CRImage) dockerCommit() error {
 	//func main() {
 	//req, err := http.NewRequest("GET", c.getURL(path), params)
+	logger.Warnln(c.UserId)
 	resp, err := http.Get(browserEndpoint + "/containers/" + strconv.FormatInt(c.UserId, 10))
 	if err != nil {
 		logger.Warnf("error getting container id: %s", err)
@@ -38,6 +41,7 @@ func (c CRImage) dockerCommit() error {
 		return err
 	}
 	var di DockerContainerID
+	logger.Warnf(string(body))
 	if err = json.Unmarshal(body, &di); err != nil {
 		logger.Warnf("error decoding container id: %s", err)
 		return err
@@ -71,12 +75,12 @@ func (c CRImage) dockerCommit() error {
 func (c CRImage) dockerPush() error {
 	logger.Println(c.ImageName)
 	name := c.ImageName + ":" + strconv.Itoa(c.Tag)
-	if err := dockerclient.TagImage(name, docker.TagImageOptions{Repo: "127.0.0.1:5000/" + c.ImageName, Tag: strconv.Itoa(c.Tag), Force: true}); err != nil {
+	if err := dockerclient.TagImage(name, docker.TagImageOptions{Repo: dockerhub + "/" + c.ImageName, Tag: strconv.Itoa(c.Tag), Force: true}); err != nil {
 		logger.Warnf("error tagging container: %s", err)
 		return err
 	}
 	logger.Println(strconv.Itoa(c.Tag))
-	opts := docker.PushImageOptions{Name: "127.0.0.1:5000/" + c.ImageName, Tag: strconv.Itoa(c.Tag), Registry: "127.0.0.1:5000"}
+	opts := docker.PushImageOptions{Name: dockerhub + "/" + c.ImageName, Tag: strconv.Itoa(c.Tag), Registry: dockerhub + "/"}
 	var auth docker.AuthConfiguration
 	if err := dockerclient.PushImage(opts, auth); err != nil {
 		logger.Warnf("error pushing container: %s", err)

@@ -7,10 +7,10 @@ import (
 	"github.com/hoisie/redis"
 	"log"
 	"net/http"
-	"net/url"
+	// "net/url"
 	"os"
 	"regexp"
-	"strconv"
+	// "strconv"
 	"strings"
 	//	"github.com/codegangsta/martini-contrib/auth"
 )
@@ -25,7 +25,7 @@ var (
 
 	//docker proxy
 
-	docker_end_point = "http://vpn.peilong.me:8080"
+	docker_end_point = "http://127.0.0.1:8080"
 	dc               *client.DockerClient
 )
 
@@ -62,12 +62,15 @@ func init() {
 				res.WriteHeader(http.StatusUnauthorized)
 				return
 			}
+			log.Println(token)
 			formInfo := url.Values{"app_id": {strconv.Itoa(1)}, "app_key": {"Ei1F4LeTIUmJeFdO1MfbdkGQpZMeQ0CUX3aQD4kMOMVsRz7IAbjeBpurD6LTvNoI"}, "token": {token}}
 			userData, err := ssoClient.IsLogin(formInfo)
 			if err != nil {
+				log.Println(err)
 				res.WriteHeader(http.StatusUnauthorized)
 				return
 			}
+			log.Println(userData)
 			if userData.Is_login == "false" {
 				res.WriteHeader(http.StatusUnauthorized)
 				return

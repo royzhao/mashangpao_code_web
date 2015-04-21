@@ -84,6 +84,8 @@ func RunCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms mart
 		fmt.Println(err)
 	} else {
 		fmt.Println(runout)
+		res.Res = runout.Message
+		res.Status = runout.Status
 	}
 
 	// if al.Id == 0 {
