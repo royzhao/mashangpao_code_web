@@ -74,11 +74,6 @@ func imageVerify(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	}
 }
 
-//func deleteImage(w http.ResponseWriter, r *http.Request) {
-//	//	vars := mux.Vars(r)
-//	//	id, _ := strconv.ParseInt(vars["id"], 10, 64)
-//}
-
 type newimage struct {
 	UserId    int64
 	ImageName string
@@ -130,7 +125,7 @@ func commitImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := ci.dockerCommit(); err != nil {
-		logger.Warnf("error decoding image: %s", err)
+		logger.Warnf("error committing image: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -172,6 +167,11 @@ func pushImage(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := ci.dockerPush(); err != nil {
 		logger.Warnf("error pushing image: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := ci.UpdateStatus(1); err != nil {
+		logger.Warnf("error updating image status: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

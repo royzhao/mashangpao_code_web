@@ -52,6 +52,7 @@ type SqlOperation interface {
 	QueryVerify(name string) bool
 	Querylog(imageid int64)
 	DeleteImg()
+	UpdateStatus(status int8) error
 	UpdateImage() error
 	UpdateStar() error
 	UpdateFork(uid int64, uname string) error
@@ -133,12 +134,9 @@ func (c CRImage) DeleteImg() {
 }
 
 //set the status of image
-func (c CRImage) SetStatus() {
-	_, err := dbmap.Exec("update cr_image set Status = 1 WHERE Image_id = ? ", c.ImageId)
-	if err != nil {
-		log.Println("Change Status failed", err)
-		return
-	}
+func (c CRImage) UpdateStatus(status int8) error {
+	_, err := dbmap.Exec("update cr_image set Status = ? WHERE Image_name = ? ", status, c.ImageName)
+	return err
 }
 
 //Update the details of an image

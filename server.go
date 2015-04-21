@@ -6,8 +6,10 @@ import (
 	"github.com/hoisie/redis"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	//	"github.com/codegangsta/martini-contrib/auth"
 )
@@ -44,6 +46,27 @@ func init() {
 	//static
 	m.Use(martini.Static("public"))
 	//m.Use(auth.Basic(AuthToken, ""))
+
+	m.Use(func(res http.ResponseWriter, req *http.Request) {
+		if req.Method != "GET" {
+			token := req.Header.Get("x-session-token")
+			if token == "" {
+				res.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			formInfo := url.Values{"app_id": {strconv.Itoa(1)}, "app_key": {"Ei1F4LeTIUmJeFdO1MfbdkGQpZMeQ0CUX3aQD4kMOMVsRz7IAbjeBpurD6LTvNoI"}, "token": {token}}
+			userData, err := ssoClient.IsLogin(formInfo)
+			if err != nil {
+				res.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			if userData.Is_login == "false" {
+				res.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+		}
+	})
+
 	m.Use(MapEncoder)
 
 	r := martini.NewRouter()
@@ -100,6 +123,8 @@ func init() {
 	r.Post("/dockerapi/image/fork", forkImage)
 	r.Get("/dockerapi/star/:uid/:id", queryStarid)
 	r.Get("/dockerapi/fork/:uid/:id", queryFork)
+	r.Post("/api/sso/islogin", isLogin)
+	r.Post("/api/sso/logout", logout)
 
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))

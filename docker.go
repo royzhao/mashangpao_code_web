@@ -11,20 +11,21 @@ import (
 )
 
 var (
-	endpoint        = "unix:///var/run/docker.sock"
+	//	endpoint        = "unix:///var/run/docker.sock"
+	endpoint        = "http://imagehub.peilong.me:81"
 	dockerclient, _ = docker.NewClient(endpoint)
+	browserEndpoint = "http://vpn.peilong.me:8080"
 )
 
-type DockerImageID struct {
+type DockerContainerID struct {
 	ID string
 }
 
 func (c CRImage) dockerCommit() error {
 	//func main() {
 	//req, err := http.NewRequest("GET", c.getURL(path), params)
-	resp, err := http.Get("http://localhost:8080/containers/" + strconv.FormatInt(c.UserId, 10))
+	resp, err := http.Get(browserEndpoint + "/containers/" + strconv.FormatInt(c.UserId, 10))
 	if err != nil {
-		//		fmt.Println(err)
 		logger.Warnf("error getting container id: %s", err)
 		return err
 	}
@@ -34,10 +35,9 @@ func (c CRImage) dockerCommit() error {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		logger.Warnf("error reading http body: %s", err)
-		//		fmt.Println(err)
 		return err
 	}
-	var di DockerImageID
+	var di DockerContainerID
 	if err = json.Unmarshal(body, &di); err != nil {
 		logger.Warnf("error decoding container id: %s", err)
 		return err
