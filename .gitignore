@@ -24,3 +24,4 @@ _testmain.go
 *.prof
 mashangpao_code_web
 public/*
+Godeps/*

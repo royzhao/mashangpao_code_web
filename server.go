@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/codegangsta/martini"
+	"github.com/dylanzjy/coderun-request-client"
 	"github.com/hoisie/redis"
 	"log"
 	"net/http"
@@ -19,13 +20,20 @@ var (
 	// 只有一个martini实例
 	m            *martini.Martini
 	redis_client redis.Client
+
+	//docker proxy
+
+	docker_end_point = "http://vpn.peilong.me:8080"
+	dc               *client.DockerClient
 )
 
 func init() {
+	dc = nil
+	log.Println(dc)
 	redis_addr := os.Getenv("REDIS_ADDR")
 	log.Println("redis addr is:" + redis_addr)
 	if redis_addr == "" {
-		redis_addr = "127.0.01:6379"
+		redis_addr = "redis.peilong.me:6379"
 	}
 	redis_client.Addr = redis_addr
 	// dbmap = nil
@@ -82,7 +90,7 @@ func init() {
 	r.Get(`/api/code/:codeid/step/:stepid/cmd`, GetCodeStepCmd)
 
 	//code run
-	r.Put(`/api/coderun/:imageid`, RunCodeStep)
+	r.Put(`/api/coderun/:imagename`, RunCodeStep)
 	r.Get(`/api/coderun/:runid`, GetRunResult)
 
 	//image api
