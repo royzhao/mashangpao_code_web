@@ -54,7 +54,7 @@ type SqlOperation interface {
 	DeleteImg()
 	UpdateStatus(status int8) error
 	UpdateImage() error
-	UpdateStar() error
+	UpdateStar(uid int64) error
 	UpdateFork(uid int64, uname string) error
 }
 
@@ -147,7 +147,7 @@ func (c CRImage) UpdateImage() error {
 }
 
 //update the star list of an image
-func (c CRImage) UpdateStar() error {
+func (c CRImage) UpdateStar(uid int64) error {
 	//	if _, err := dbmap.Update(&c); err != nil {
 	//		log.Println("Update image log failed", err)
 	//	}
@@ -158,14 +158,17 @@ func (c CRImage) UpdateStar() error {
 		return err
 	}
 	//查询是否存在star记录
-	count, err := trans.SelectInt("select count(1) from cr_star where user_id = ? and image_id = ?", c.UserId, c.ImageId)
+	count, err := trans.SelectInt("select count(1) from cr_star where user_id = ? and image_id = ?", uid, c.ImageId)
 	if err != nil {
 		return err
 	}
+	log.Println("================================================================================================")
+	log.Println(count)
+	log.Println("================================================================================================")
 	//如果存在则查出那条记录
 	if count > 0 {
 		star = false
-		err = trans.SelectOne(&cs, "select * from cr_star where user_id = ? and image_id = ?", c.UserId, c.ImageId)
+		err = trans.SelectOne(&cs, "select * from cr_star where user_id = ? and image_id = ?", uid, c.ImageId)
 		if err != nil {
 			trans.Rollback()
 			return err
@@ -174,7 +177,7 @@ func (c CRImage) UpdateStar() error {
 	//如果不存在记录，则插入一条，并使star数加一
 	if star {
 		//		err = dbmap.Insert(&cs)
-		cs = CRStar{UserId: c.UserId, ImageId: c.ImageId}
+		cs = CRStar{UserId: uid, ImageId: c.ImageId}
 		if err := trans.Insert(&cs); err != nil {
 			log.Println("Star failed", err)
 			trans.Rollback()
@@ -214,18 +217,26 @@ func (c CRImage) UpdateFork(uid int64, uname string) error {
 	if err != nil {
 		return err
 	}
+	//获得新镜像名称
+	oldName := strings.Split(c.ImageName, "-")
+	newName := uname + "-" + oldName[1]
+	//检查是否已存在同名镜像
+	count, err := trans.SelectInt("select count(1) from cr_image where User_id = ? and Image_name = ?", uid, newName)
+	if err != nil || count > 0 {
+		return err
+	}
 	//检查是否存在该fork记录
-	count, err := trans.SelectInt("select count(1) from cr_fork where user_id = ? and image_id = ?", c.UserId, c.ImageId)
+	count, err = trans.SelectInt("select count(1) from cr_fork where user_id = ? and image_id = ?", uid, c.ImageId)
 	if err != nil {
 		return err
 	}
-	//存在则推出
+	//存在则退出
 	if count > 0 {
 		trans.Rollback()
 		return err
 	}
 	//不存在，先插入一条cr_fork表记录
-	cf = CRFork{UserId: c.UserId, ImageId: c.ImageId}
+	cf = CRFork{UserId: uid, ImageId: c.ImageId}
 	if err := trans.Insert(&cf); err != nil {
 		trans.Rollback()
 		return err
@@ -236,9 +247,9 @@ func (c CRImage) UpdateFork(uid int64, uname string) error {
 		trans.Rollback()
 		return err
 	}
-	//获得新镜像名称，并插入新镜像记录
-	oldName := strings.Split(c.ImageName, "-")
-	newName := uname + "-" + oldName[1]
+	//插入新镜像记录
+	//	oldName := strings.Split(c.ImageName, "-")
+	//	newName := uname + "-" + oldName[1]
 	ni := newImage(uid, newName, 1, c.Descrip)
 	err = trans.Insert(&ni)
 	if err != nil {
@@ -253,8 +264,10 @@ func (c CRImage) UpdateFork(uid int64, uname string) error {
 	return nil
 }
 
+//query whether there is a star log, if is, return the starid, else return 0
 func (c CRStar) QueryStar() int64 {
 	var cs CRStar
+	//c.UserId here is the current user's id, not the image owner's id
 	err := dbmap.SelectOne(&cs, "select star_id from cr_star where user_id = ? and image_id = ?", c.UserId, c.ImageId)
 	//	count, err := dbmap.SelectInt("select count(1) from cr_star where user_id = ? and image_id = ?", cs.UserId, cs.ImageId)
 	if err != nil {
@@ -264,7 +277,9 @@ func (c CRStar) QueryStar() int64 {
 	return cs.StarId
 }
 
+//not consider the situation that the user is owner of image, but it is controller by the front end, and the function is only for query
 func (c CRFork) QueryFork() bool {
+	//c.UserId here is the current user's id, not the image owner's id
 	count, err := dbmap.SelectInt("select count(1) from cr_fork where user_id = ? and image_id = ?", c.UserId, c.ImageId)
 	if err != nil {
 		log.Println("Query starlog failed", err)

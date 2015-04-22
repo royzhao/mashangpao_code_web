@@ -179,6 +179,12 @@ func pushImage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+//the parameter of fork image function
+type starData struct {
+	Uid   int64
+	Image CRImage
+}
+
 //star or unstar a image
 func starImage(w http.ResponseWriter, r *http.Request) {
 	//	r.ParseForm()
@@ -187,14 +193,15 @@ func starImage(w http.ResponseWriter, r *http.Request) {
 	//	sid := r.FormValue("id")
 	//	log.Println(sid)
 	//	log.Println(star)
-	var cr CRImage
+	//	var cr CRImage
+	var data starData
 	//	var cs CRStar
-	if err := json.NewDecoder(r.Body).Decode(&cr); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		logger.Warnf("error decoding image: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err := cr.UpdateStar()
+	err := data.Image.UpdateStar(data.Uid)
 	if err != nil {
 		logger.Warnf("error staring image: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -235,6 +242,11 @@ func forkImage(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		logger.Warnf("error decoding image: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	//can't fork one's own image
+	if data.Uid == data.Image.UserId {
+		http.Error(w, "Can not fork your own image", http.StatusInternalServerError)
 		return
 	}
 	err := data.Image.UpdateFork(data.Uid, data.Uname)
