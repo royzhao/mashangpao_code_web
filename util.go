@@ -19,7 +19,7 @@ func GetValue(key string) (int, string) {
 		code_run_res = "commit successful, now running"
 		//pull request
 	} else {
-		status = 2
+		status = 5
 	}
 	return status, code_run_res
 }

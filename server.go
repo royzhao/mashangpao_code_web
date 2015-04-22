@@ -25,8 +25,7 @@ var (
 
 	//docker proxy
 
-	docker_end_point = "http://127.0.0.1:8080"
-	dc               *client.DockerClient
+	dc *client.DockerClient
 )
 
 func init() {
@@ -55,28 +54,28 @@ func init() {
 	m.Use(martini.Static("public"))
 	//m.Use(auth.Basic(AuthToken, ""))
 
-	m.Use(func(res http.ResponseWriter, req *http.Request) {
-		if req.Method != "GET" {
-			token := req.Header.Get("x-session-token")
-			if token == "" {
-				res.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			log.Println(token)
-			formInfo := url.Values{"app_id": {strconv.Itoa(1)}, "app_key": {"Ei1F4LeTIUmJeFdO1MfbdkGQpZMeQ0CUX3aQD4kMOMVsRz7IAbjeBpurD6LTvNoI"}, "token": {token}}
-			userData, err := ssoClient.IsLogin(formInfo)
-			if err != nil {
-				log.Println(err)
-				res.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			log.Println(userData)
-			if userData.Is_login == "false" {
-				res.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-		}
-	})
+	// m.Use(func(res http.ResponseWriter, req *http.Request) {
+	// 	if req.Method != "GET" {
+	// 		token := req.Header.Get("x-session-token")
+	// 		if token == "" {
+	// 			res.WriteHeader(http.StatusUnauthorized)
+	// 			return
+	// 		}
+	// 		log.Println(token)
+	// 		formInfo := url.Values{"app_id": {strconv.Itoa(1)}, "app_key": {"Ei1F4LeTIUmJeFdO1MfbdkGQpZMeQ0CUX3aQD4kMOMVsRz7IAbjeBpurD6LTvNoI"}, "token": {token}}
+	// 		userData, err := ssoClient.IsLogin(formInfo)
+	// 		if err != nil {
+	// 			log.Println(err)
+	// 			res.WriteHeader(http.StatusUnauthorized)
+	// 			return
+	// 		}
+	// 		log.Println(userData)
+	// 		if userData.Is_login == "false" {
+	// 			res.WriteHeader(http.StatusUnauthorized)
+	// 			return
+	// 		}
+	// 	}
+	// })
 
 	m.Use(MapEncoder)
 

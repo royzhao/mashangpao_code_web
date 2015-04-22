@@ -49,6 +49,9 @@ func RunCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms mart
 	cmdstr := imageid
 	cmds := make([]client.Cmd_type, 4)
 	for i, v := range t.Cmds {
+		if v.Cmd != "" {
+
+		}
 		cmdstr += v.Cmd + v.Args
 		cmds[i].Cmd = v.Cmd
 		cmds[i].Args = v.Args
@@ -72,25 +75,30 @@ func RunCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms mart
 		Res:    code_run_res,
 		Status: status,
 	}
-	if dc == nil {
-		dc, err = client.NewDockerClient(docker_end_point)
+	if status == 5 {
+		return http.StatusOK, Must(enc.Encode(res))
+	} else {
+		if dc == nil {
+			dc, err = client.NewDockerClient(browserEndpoint)
+			if err != nil {
+				fmt.Println(err)
+				panic(err)
+			}
+		}
+		runout, err := dc.DockerRun(*data, imageid)
 		if err != nil {
 			fmt.Println(err)
-			panic(err)
+		} else {
+			fmt.Println(runout)
+			res.Res = runout.Message
+			res.Status = runout.Status
 		}
-	}
-	runout, err := dc.DockerRun(*data, imageid)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(runout)
-		res.Res = runout.Message
-		res.Status = runout.Status
+
+		// if al.Id == 0 {
+		// 	return http.StatusNotFound, Must(enc.Encode(
+		// 		NewError(ErrCodeNotExist, fmt.Sprintf("the Code step detail with id %s does not exist", parms["stepid"]))))
+		// }
+		return http.StatusOK, Must(enc.Encode(res))
 	}
 
-	// if al.Id == 0 {
-	// 	return http.StatusNotFound, Must(enc.Encode(
-	// 		NewError(ErrCodeNotExist, fmt.Sprintf("the Code step detail with id %s does not exist", parms["stepid"]))))
-	// }
-	return http.StatusOK, Must(enc.Encode(res))
 }
