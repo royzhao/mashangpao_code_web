@@ -10,7 +10,7 @@ import (
 )
 
 type Run_code struct {
-	Code Code_detail
+	Code string
 	Meta Code_step
 	Cmds []Code_step_cmd
 }
@@ -56,7 +56,7 @@ func RunCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms mart
 		cmds[i].Cmd = v.Cmd
 		cmds[i].Args = v.Args
 	}
-	cmdstr += t.Code.Code_content
+	cmdstr += t.Code
 	cmdstr += imageid
 	//compute md5 as id
 	id := GetMd5String(cmdstr)
@@ -65,7 +65,7 @@ func RunCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms mart
 		Workdir: t.Meta.Work_dir,
 		Code: client.Code_type{
 			Filename: t.Meta.Code_name,
-			Content:  t.Code.Code_content,
+			Content:  t.Code,
 		},
 		Cmds: cmds,
 	}
