@@ -44,6 +44,7 @@ type Code_all struct {
 }
 type Code_detail struct {
 	Id           int    `json:"id"`
+	Stepid       int    `json:"stepid"`
 	Code_content string `json:"code_content"`
 	Post_content string `json:"post_content"`
 	Time         int    `json:time`
@@ -124,7 +125,7 @@ func (db *codeStepDB) Get(id int) Code_step_meta {
 func (db *codeStepDB) GetStepDetail(id int) Code_all {
 	var res Code_detail
 	var ret Code_all
-	cmd := fmt.Sprintf("select * from code_step_detail where id=%d", id)
+	cmd := fmt.Sprintf("select * from code_step_detail where stepid=%d", id)
 	err := db.m.SelectOne(&res, cmd)
 	checkErr(err, cmd+" failed")
 	meta := db.Get(id)
@@ -216,6 +217,7 @@ func (db *codeStepDB) UpdateCodeCmd(stepid int, a []Code_step_cmd) error {
 		log.Println(len(tmp))
 		// if tmp.Stepid != 0 && tmp.Seq != 0 {
 		if len(tmp) > 0 {
+			v.Id = tmp[0].Id
 			_, err := db.m.Update(&v)
 			checkErr(err, "Update failed")
 		} else {
@@ -238,7 +240,17 @@ func (db *codeStepDB) DeleteCodeCmd(stepid int, seqid int) error {
 }
 func (db *codeStepDB) UpdateStepDetail(a *Code_detail) error {
 	//get old value
-	count, err := db.m.Update(a)
+	var res Code_detail
+	var count int64
+	cmd := fmt.Sprintf("select * from code_step_detail where stepid=%d", a.Stepid)
+	err := db.m.SelectOne(&res, cmd)
+	checkErr(err, cmd+" failed")
+	if err != nil {
+		err = db.m.Insert(a)
+	} else {
+		a.Id = res.Id
+		count, err = db.m.Update(a)
+	}
 	checkErr(err, "Update failed")
 	log.Println("Rows updated:", count)
 	return nil
@@ -261,5 +273,5 @@ func init_codestep(db *gorp.DbMap) {
 
 	db.AddTableWithName(Code_step{}, "code_step_meta").SetKeys(true, "Id")
 	db.AddTableWithName(Code_detail{}, "code_step_detail").SetKeys(true, "Id")
-	db.AddTableWithName(Code_step_cmd{}, "code_step_cmd").SetKeys(false, "Id")
+	db.AddTableWithName(Code_step_cmd{}, "code_step_cmd").SetKeys(true, "Id")
 }

@@ -156,7 +156,7 @@ func UpdateCodeStepDetail(r *http.Request, enc Encoder, db codeStepDB_inter, par
 			NewError(ErrCodeNotExist, fmt.Sprintf("the code with id %s does not exist", parms["codeid"]))))
 	}
 	err = db.UpdateStepDetail(al)
-	a := db.GetStepDetail(al.Id)
+	a := db.GetStepDetail(al.Stepid)
 	switch err {
 	case ErrAlreadyExists:
 		return http.StatusConflict, Must(enc.Encode(
@@ -213,8 +213,8 @@ func getPutCodeSetpDetail(r *http.Request, parms martini.Params) (*Code_detail, 
 	if err != nil {
 		panic(err)
 	}
+	t.Stepid = id
 	log.Println(t)
-	t.Id = id
 	return &t, nil
 }
 
