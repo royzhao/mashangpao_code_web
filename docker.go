@@ -12,11 +12,15 @@ import (
 
 var (
 	//	endpoint        = "unix:///var/run/docker.sock"
-	endpoint = "http://imagehub.peilong.me:81"
+	// endpoint = "http://imagehub.peilong.me:81"
 
-	dockerclient, _ = docker.NewClient(endpoint)
-	browserEndpoint = "http://vpn.peilong.me:8080"
-	dockerhub       = "docker2.peilong.me:5000"
+	// dockerclient, _ = docker.NewClient(endpoint)
+	// browserEndpoint = "http://vpn.peilong.me:8080"
+	// dockerhub       = "docker2.peilong.me:5000"
+	endpoint        string
+	browserEndpoint string
+	dockerhub       string
+	dockerclient    *docker.Client
 )
 
 type DockerContainerID struct {
