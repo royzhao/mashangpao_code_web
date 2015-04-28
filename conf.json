@@ -1,0 +1,7 @@
+{
+	"Endpoint":"http://120.27.30.150",
+	"Dockerhub":"docker2.peilong.me:5000",
+	"BrowserEndpoint":"http://vpn.peilong.me:8080",
+	"Redis_addr":"redis.peilong.me:6379",
+	"DB_addr":"120.27.30.150:3306"
+}

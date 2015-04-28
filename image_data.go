@@ -3,6 +3,7 @@ package main
 import (
 	"gopkg.in/gorp.v1"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -162,9 +163,6 @@ func (c CRImage) UpdateStar(uid int64) error {
 	if err != nil {
 		return err
 	}
-	log.Println("================================================================================================")
-	log.Println(count)
-	log.Println("================================================================================================")
 	//如果存在则查出那条记录
 	if count > 0 {
 		star = false
@@ -247,12 +245,18 @@ func (c CRImage) UpdateFork(uid int64, uname string) error {
 		trans.Rollback()
 		return err
 	}
+	//调用docker API，tag新的镜像
+	oldImageName := c.ImageName + ":" + strconv.Itoa(c.Tag)
+	ni := newImage(uid, newName, 1, c.Descrip)
+	if err = ni.dockerFork(oldImageName); err != nil {
+		trans.Rollback()
+		return err
+	}
 	//插入新镜像记录
 	//	oldName := strings.Split(c.ImageName, "-")
 	//	newName := uname + "-" + oldName[1]
-	ni := newImage(uid, newName, 1, c.Descrip)
-	err = trans.Insert(&ni)
-	if err != nil {
+	//	ni := newImage(uid, newName, 1, c.Descrip)
+	if err = trans.Insert(&ni); err != nil {
 		trans.Rollback()
 		return err
 	}

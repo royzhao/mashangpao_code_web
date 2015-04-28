@@ -4,7 +4,9 @@ import (
 	"flag"
 	"github.com/codegangsta/martini"
 	"github.com/dylanzjy/coderun-request-client"
+	"github.com/fsouza/go-dockerclient"
 	"github.com/hoisie/redis"
+	"gopkg.in/gorp.v1"
 	"log"
 	"net/http"
 	"net/url"
@@ -17,7 +19,7 @@ import (
 
 var (
 	addr  = flag.String("p", ":9000", "Address and port to serve dockerui")
-	dbmap = initDb()
+	dbmap *gorp.DbMap
 
 	// 只有一个martini实例
 	m            *martini.Martini
@@ -25,21 +27,31 @@ var (
 
 	//docker proxy
 
-	dc *client.DockerClient
+	dc   *client.DockerClient
+	conf Configuration
 )
 
 func init() {
+	conf, err := ReadConfigure("conf.json")
+	if err != nil {
+		panic(err)
+	}
+	endpoint = conf.Endpoint
+	dockerclient, _ = docker.NewClient(endpoint)
+	browserEndpoint = conf.BrowserEndpoint
+	dockerhub = conf.Dockerhub
+	redis_addr := conf.Redis_addr
 	dc = nil
 	log.Println(dc)
-	redis_addr := os.Getenv("REDIS_ADDR")
-	log.Println("redis addr is:" + redis_addr)
-	if redis_addr == "" {
-		redis_addr = "redis.peilong.me:6379"
-	}
+	// redis_addr := os.Getenv("REDIS_ADDR")
+	// log.Println("redis addr is:" + redis_addr)
+	// if redis_addr == "" {
+	// 	redis_addr = "redis.peilong.me:6379"
+	// }
 	redis_client.Addr = redis_addr
 	// dbmap = nil
 	// //init database
-	dbmap := initDb()
+	dbmap = initDb(conf.DB_addr)
 	dbmap.TraceOn("[gorp]", log.New(os.Stdout, "myapp:", log.Lmicroseconds))
 	log.Println("init db is successful!")
 	// initrundb()
@@ -212,7 +224,7 @@ func main() {
 	//
 	flag.Parse()
 	defer dbmap.Db.Close()
-	log.Println("listening on 8001")
+	log.Println("listening on 9000")
 	if err := http.ListenAndServe(*addr, m); err != nil {
 		log.Fatal(err)
 	}

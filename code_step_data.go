@@ -44,6 +44,7 @@ type Code_all struct {
 }
 type Code_detail struct {
 	Id           int    `json:"id"`
+	Stepid       int    `json:"stepid"`
 	Code_content string `json:"code_content"`
 	Post_content string `json:"post_content"`
 	Time         int    `json:time`
@@ -124,7 +125,7 @@ func (db *codeStepDB) Get(id int) Code_step_meta {
 func (db *codeStepDB) GetStepDetail(id int) Code_all {
 	var res Code_detail
 	var ret Code_all
-	cmd := fmt.Sprintf("select * from code_step_detail where id=%d", id)
+	cmd := fmt.Sprintf("select * from code_step_detail where stepid=%d", id)
 	err := db.m.SelectOne(&res, cmd)
 	checkErr(err, cmd+" failed")
 	meta := db.Get(id)
@@ -158,8 +159,22 @@ func (db *codeStepDB) Add(a *Code_step) (int, error) {
 		return 0, err
 	}
 	checkErr(err, "insert failed")
-	_, err = db.m.Exec("insert into `code_step_detail` (`Id`,`Code_content`,`Post_content`,`Time`) values (?,'','',0)", a.Id)
-	_, err = db.m.Exec("insert into `code_step_cmd` (`Stepid`,`Cmd`,`Args`,`Is_replace`,`Seq`) values(?,'','',1,1)", a.Id)
+	var detail = &Code_detail{
+		Id:           a.Id,
+		Code_content: "",
+		Post_content: "",
+	}
+	var cmds = &Code_step_cmd{
+		Stepid:     a.Id,
+		Cmd:        "",
+		Args:       "",
+		Is_replace: 1,
+		Seq:        1,
+	}
+	err = db.m.Insert(detail)
+	err = db.m.Insert(cmds)
+	// _, err = db.m.Exec("insert into `code_step_detail` (`Id`,`Code_content`,`Post_content`,`Time`) values (?,'','',0)", a.Id)
+	// _, err = db.m.Exec("insert into `code_step_cmd` (`Stepid`,`Cmd`,`Args`,`Is_replace`,`Seq`) values(?,'','',1,1)", a.Id)
 	return a.Id, nil
 	// trans, err := db.m.Begin()
 	// if err != nil {
@@ -177,58 +192,8 @@ func (db *codeStepDB) Add(a *Code_step) (int, error) {
 }
 
 func (db *codeStepDB) Update(a *Code_step) error {
-	log.Println(a.String())
-	flag := 1
-	cmd := "update code_step_meta set"
-	if a.Name != "" {
-		log.Println("name: " + a.Name)
-		cmd += " name='" + a.Name + "'"
-		flag = 0
-	}
-	if a.Code_name != "" {
-		log.Println("code_name: " + a.Code_name)
-		if flag == 0 {
-			cmd += ","
-		}
-		cmd += " code_name='" + a.Code_name + "'"
-		flag = 0
-	}
-	if a.Description != "" {
-		log.Println("description: " + a.Description)
-		if flag == 0 {
-			cmd += ","
-		}
-		cmd += " description='" + a.Description + "'"
-		flag = 0
-	}
-	if a.Work_dir != "" {
-		log.Println("work_dir: " + a.Work_dir)
-		if flag == 0 {
-			cmd += ","
-		}
-		cmd += " work_dir='" + a.Work_dir + "'"
-		flag = 0
-	}
-	if a.Image_id != 0 {
-		if flag == 0 {
-			cmd += ","
-		}
-		cmd = fmt.Sprintf("%s image_id=%d", cmd, a.Image_id)
-		flag = 0
-	}
-	if a.Status != 0 {
-		if flag == 0 {
-			cmd += ","
-		}
-		cmd = fmt.Sprintf("%s status=%d", cmd, a.Status)
-		flag = 0
-	}
-	if flag == 1 {
-		return nil
-	}
-	cmd = fmt.Sprintf("%s where id=%d", cmd, a.Id)
-	count, err := db.m.Exec(cmd)
-	checkErr(err, "Update failed"+cmd)
+	count, err := db.m.Update(a)
+	checkErr(err, "Update failed")
 	log.Println("Rows updated:", count)
 	return nil
 }
@@ -252,35 +217,11 @@ func (db *codeStepDB) UpdateCodeCmd(stepid int, a []Code_step_cmd) error {
 		log.Println(len(tmp))
 		// if tmp.Stepid != 0 && tmp.Seq != 0 {
 		if len(tmp) > 0 {
-			cmd := "update code_step_cmd set"
-			flag := 1
-			if v.Cmd != "" {
-				cmd += " cmd='" + v.Cmd + "'"
-				flag = 0
-			}
-			if v.Args != "" {
-				if flag == 0 {
-					cmd += ","
-				}
-				cmd += " args='" + v.Args + "'"
-				flag = 0
-			}
-			if v.Is_replace != 0 {
-				if flag == 0 {
-					cmd += ","
-				}
-				cmd = fmt.Sprintf("%s is_replace=%d", cmd, v.Is_replace)
-				flag = 0
-			}
-			if flag == 0 {
-				cmd = fmt.Sprintf("%s where stepid=%d and seq=%d", cmd, stepid, v.Seq)
-				_, err := db.m.Exec(cmd)
-				checkErr(err, "Update failed")
-			}
+			v.Id = tmp[0].Id
+			_, err := db.m.Update(&v)
+			checkErr(err, "Update failed")
 		} else {
-			cmd := fmt.Sprintf("insert into code_step_cmd (seq,cmd,args,is_replace,stepid) values(%d,'%s','%s',%d,%d)", v.Seq, v.Cmd, v.Args, v.Is_replace, v.Stepid)
-
-			_, err := db.m.Exec(cmd)
+			err := db.m.Insert(&v)
 			checkErr(err, "insert failed")
 		}
 	}
@@ -298,26 +239,18 @@ func (db *codeStepDB) DeleteCodeCmd(stepid int, seqid int) error {
 	return err
 }
 func (db *codeStepDB) UpdateStepDetail(a *Code_detail) error {
-	flag := 1
-	cmd := "update code_step_detail set"
-	if a.Code_content != "" {
-		log.Println("Code_content: " + a.Code_content)
-		cmd += " Code_content='" + a.Code_content + "'"
-		flag = 0
+	//get old value
+	var res Code_detail
+	var count int64
+	cmd := fmt.Sprintf("select * from code_step_detail where stepid=%d", a.Stepid)
+	err := db.m.SelectOne(&res, cmd)
+	checkErr(err, cmd+" failed")
+	if err != nil {
+		err = db.m.Insert(a)
+	} else {
+		a.Id = res.Id
+		count, err = db.m.Update(a)
 	}
-	if a.Post_content != "" {
-		log.Println("Post_content: " + a.Post_content)
-		if flag == 0 {
-			cmd += ","
-		}
-		cmd += " Post_content='" + a.Post_content + "'"
-		flag = 0
-	}
-	if flag == 1 {
-		return nil
-	}
-	cmd = fmt.Sprintf("%s where id=%d", cmd, a.Id)
-	count, err := db.m.Exec(cmd)
 	checkErr(err, "Update failed")
 	log.Println("Rows updated:", count)
 	return nil
@@ -340,5 +273,5 @@ func init_codestep(db *gorp.DbMap) {
 
 	db.AddTableWithName(Code_step{}, "code_step_meta").SetKeys(true, "Id")
 	db.AddTableWithName(Code_detail{}, "code_step_detail").SetKeys(true, "Id")
-	db.AddTableWithName(Code_step_cmd{}, "code_step_cmd").SetKeys(false, "Id")
+	db.AddTableWithName(Code_step_cmd{}, "code_step_cmd").SetKeys(true, "Id")
 }

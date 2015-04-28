@@ -13,10 +13,10 @@ import (
 // 	dbmap := initDb()
 // 	dbmap.TraceOn("[gorp]", log.New(os.Stdout, "myapp:", log.Lmicroseconds))
 // }
-func initDb() *gorp.DbMap {
+func initDb(db_addr string) *gorp.DbMap {
 	// connect to db using standard Go database/sql API
 	// use whatever database/sql driver you wish
-	db, err := sql.Open("mysql", "root:root@tcp(vpn.peilong.me:3306)/msp")
+	db, err := sql.Open("mysql", "root:root@tcp("+db_addr+")/msp")
 	checkErr(err, "sql.Open failed")
 
 	// construct a gorp DbMap
