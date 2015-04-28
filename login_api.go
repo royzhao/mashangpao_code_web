@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	//	"fmt"
 	"github.com/dylanzjy/coderun-request-client"
 	"net/http"
 	"net/url"
@@ -27,9 +27,9 @@ func isLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(info)
-	formInfo := url.Values{"app_id": {strconv.Itoa(info.App_id)}, "app_key": {info.App_key}, "token": {info.Token}}
-	fmt.Println(formInfo)
+	//	fmt.Println(info)
+	formInfo := url.Values{"app_id": {strconv.Itoa(1)}, "app_key": {"Ei1F4LeTIUmJeFdO1MfbdkGQpZMeQ0CUX3aQD4kMOMVsRz7IAbjeBpurD6LTvNoI"}, "token": {info.Token}}
+	//	fmt.Println(formInfo)
 	userData, err := ssoClient.IsLogin(formInfo)
 	if err != nil {
 		logger.Warnf("error querying login status: %s", err)

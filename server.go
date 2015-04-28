@@ -7,10 +7,10 @@ import (
 	"github.com/hoisie/redis"
 	"log"
 	"net/http"
-	// "net/url"
+	"net/url"
 	"os"
 	"regexp"
-	// "strconv"
+	"strconv"
 	"strings"
 	//	"github.com/codegangsta/martini-contrib/auth"
 )
@@ -54,28 +54,28 @@ func init() {
 	m.Use(martini.Static("public"))
 	//m.Use(auth.Basic(AuthToken, ""))
 
-	// m.Use(func(res http.ResponseWriter, req *http.Request) {
-	// 	if req.Method != "GET" {
-	// 		token := req.Header.Get("x-session-token")
-	// 		if token == "" {
-	// 			res.WriteHeader(http.StatusUnauthorized)
-	// 			return
-	// 		}
-	// 		log.Println(token)
-	// 		formInfo := url.Values{"app_id": {strconv.Itoa(1)}, "app_key": {"Ei1F4LeTIUmJeFdO1MfbdkGQpZMeQ0CUX3aQD4kMOMVsRz7IAbjeBpurD6LTvNoI"}, "token": {token}}
-	// 		userData, err := ssoClient.IsLogin(formInfo)
-	// 		if err != nil {
-	// 			log.Println(err)
-	// 			res.WriteHeader(http.StatusUnauthorized)
-	// 			return
-	// 		}
-	// 		log.Println(userData)
-	// 		if userData.Is_login == "false" {
-	// 			res.WriteHeader(http.StatusUnauthorized)
-	// 			return
-	// 		}
-	// 	}
-	// })
+	m.Use(func(res http.ResponseWriter, req *http.Request) {
+		if req.Method != "GET" {
+			token := req.Header.Get("x-session-token")
+			if token == "" {
+				res.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			log.Println(token)
+			formInfo := url.Values{"app_id": {strconv.Itoa(1)}, "app_key": {"Ei1F4LeTIUmJeFdO1MfbdkGQpZMeQ0CUX3aQD4kMOMVsRz7IAbjeBpurD6LTvNoI"}, "token": {token}}
+			userData, err := ssoClient.IsLogin(formInfo)
+			if err != nil {
+				log.Println(err)
+				res.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			log.Println(userData)
+			if userData.Is_login == "false" {
+				res.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+		}
+	})
 
 	m.Use(MapEncoder)
 
