@@ -273,3 +273,12 @@ func queryFork(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
+func searchImage(w http.ResponseWriter, r *http.Request, parms martini.Params) {
+	name := parms["name"]
+	result := QuerybyName(name)
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}

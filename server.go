@@ -133,6 +133,7 @@ func init() {
 	//image api
 	r.Get("/dockerapi/image/:id/name", getImageName)
 	r.Get("/dockerapi/images", listImages)
+	r.Post("/dockerapi/image/:name/search", searchImage)
 	r.Get("/dockerapi/images/:id/list", listMyImages)
 	r.Get("/dockerapi/images/:id/log", imageLogs)
 	r.Get("/dockerapi/images/:name/verify", imageVerify)
