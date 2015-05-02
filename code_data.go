@@ -25,6 +25,12 @@ type Code_modle struct {
 	Star        int    `db:"star"`
 }
 
+type CodeStar struct {
+	StarId int `db:"star_id"`
+	CodeId int `db:"code_id"`
+	UserId int `db:"user_id"`
+}
+
 // The Code data structure, serializable in JSON, XML and text using the Stringer interface.
 type Code struct {
 	XMLName     xml.Name `json:"-" xml:"album"`
@@ -54,11 +60,71 @@ type codeDB_inter interface {
 	Find(name string, description string, create_time string, userid int) []Code
 	Add(a *Code) (int, error)
 	Update(a *Code) error
+	UpdateStar(user int, codeid int) (*Code, error)
 	Delete(id int)
 }
 
 // The one and only database instance.
 var code_db codeDB_inter
+
+//add star
+func (db *codeDB) UpdateStar(userid int, codeid int) (*Code, error) {
+	var cs CodeStar
+	star := true
+	trans, err := dbmap.Begin()
+	if err != nil {
+		return nil, err
+	}
+	//查询是否存在star记录
+	count, err := trans.SelectInt("select count(1) from code_star where user_id = ? and code_id = ?", userid, codeid)
+	if err != nil {
+		trans.Rollback()
+		return nil, err
+	}
+	//如果存在则查出那条记录
+	if count > 0 {
+		star = false
+		err = trans.SelectOne(&cs, "select * from code_star where user_id = ? and code_id = ?", userid, codeid)
+		if err != nil {
+			trans.Rollback()
+			return nil, err
+		}
+	}
+	//如果不存在记录，则插入一条，并使star数加一
+	if star {
+		//		err = dbmap.Insert(&cs)
+		cs = CodeStar{UserId: userid, CodeId: codeid}
+		if err := trans.Insert(&cs); err != nil {
+			log.Println("Star failed", err)
+			trans.Rollback()
+			return nil, err
+		}
+		_, err := trans.Exec("update code set Star = Star + 1 WHERE id = ? ", codeid)
+		if err != nil {
+			log.Println("Star failed", err)
+			trans.Rollback()
+			return nil, err
+		}
+	} else {
+		//如果存在则将该记录删除，并使star数减一
+		if _, err := trans.Delete(&cs); err != nil {
+			trans.Rollback()
+			return nil, err
+		}
+		_, err := trans.Exec("update code set Star = Star - 1 WHERE id = ? ", codeid)
+		if err != nil {
+			trans.Rollback()
+			return nil, err
+		}
+	}
+	err = trans.Commit()
+	if err != nil {
+		trans.Rollback()
+		return nil, err
+	}
+	res := db.Get(codeid)
+	return &res, nil
+}
 
 // GetAll returns all albums from the database.
 func (db *codeDB) GetAll() []Code {
@@ -248,6 +314,7 @@ func init_code(db *gorp.DbMap) {
 	// code_db.Add(&Code{Name: "zpl2", Description: "Reign2", User_id: 2})
 	// code_db.Add(&Code{Name: "zpl3", Description: "Reign3", User_id: 1})
 	db.AddTableWithName(Code_modle{}, "code").SetKeys(true, "Id")
+	db.AddTableWithName(CodeStar{}, "code_star").SetKeys(true, "StarId")
 }
 
 func convertJson2Modle(code Code) Code_modle {

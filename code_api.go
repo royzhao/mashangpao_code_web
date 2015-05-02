@@ -75,6 +75,28 @@ func AddCode(w http.ResponseWriter, r *http.Request, enc Encoder, parms martini.
 	}
 }
 
+func UpdateCodeStar(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
+	log.Println("update code star")
+	userid, err := strconv.Atoi(parms["userid"])
+	if err != nil {
+		// Invalid id, 404
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("invalid user %s", parms["userid"]))))
+	}
+	codeid, err := strconv.Atoi(parms["codeid"])
+	if err != nil {
+		// Invalid id, 404
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("invalid codeid %s", parms["codeid"]))))
+	}
+	ret, err := db.UpdateStar(userid, codeid)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("star failed"))))
+	}
+	return http.StatusOK, Must(enc.Encode(ret))
+}
+
 // UpdateCode changes the specified code.
 func UpdateCode(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
 	al, err := getPutCode(r, parms)

@@ -1,7 +1,7 @@
 {
-	"Endpoint":"http://120.27.30.150",
+	"Endpoint":"http://imagehub.learn4me.com",
 	"Dockerhub":"docker2.peilong.me:5000",
-	"BrowserEndpoint":"http://vpn.peilong.me:8080",
+	"BrowserEndpoint":"http://proxy.learn4me.com",
 	"Redis_addr":"redis.peilong.me:6379",
-	"DB_addr":"120.27.30.150:3306"
+	"DB_addr":"127.0.0.1:3306"
 }
