@@ -3,5 +3,5 @@
 	"Dockerhub":"docker2.peilong.me:5000",
 	"BrowserEndpoint":"http://proxy.learn4me.com",
 	"Redis_addr":"redis.peilong.me:6379",
-	"DB_addr":"127.0.0.1:3306"
+	"DB_addr":"vpn.peilong.me:3306"
 }

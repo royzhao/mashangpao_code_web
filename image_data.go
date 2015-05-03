@@ -74,6 +74,23 @@ func newImage(uid int64, imgname string, tag int, des string) CRImage {
 	}
 }
 
+//list all the images
+func QueryImage() []CRImage {
+	var image []CRImage
+	_, err := dbmap.Select(&image, "select * from cr_image")
+	checkErr(err, "Select failed")
+	return image
+}
+
+//fuzzy search of image list by image name
+func QuerybyName(name string) []CRImage {
+	var image []CRImage
+	pattern := string("%" + name + "%")
+	_, err := dbmap.Select(&image, "select * from cr_image where Image_name like ?", pattern)
+	checkErr(err, "Select failed")
+	return image
+}
+
 //insert a new record into cr_image table
 func (c CRImage) Add() error {
 	count, err := dbmap.SelectInt("select count(1) from cr_image where Image_name = ?", c.ImageName)
@@ -310,9 +327,3 @@ func checkErr(err error, msg string) {
 	}
 }
 */
-func QueryImage() []CRImage {
-	var image []CRImage
-	_, err := dbmap.Select(&image, "select * from cr_image")
-	checkErr(err, "Select failed")
-	return image
-}

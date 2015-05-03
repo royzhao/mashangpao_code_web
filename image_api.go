@@ -12,7 +12,27 @@ var logger = logrus.New()
 
 //list all the images
 func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
-	images := QueryImage()
+	//	images := QueryImage()
+	//	if err := json.NewEncoder(w).Encode(images); err != nil {
+	//		logger.Error(err)
+	//		http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	}
+	val, err := redis_client.Get("hotimage")
+	if err != nil {
+		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	var list HotImages
+	if err = json.Unmarshal(val, &list); err != nil {
+		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	var images []CRImage
+	if len(list.List) > 50 {
+		images = list.List[0:50]
+	} else {
+		images = list.List[0:]
+	}
 	if err := json.NewEncoder(w).Encode(images); err != nil {
 		logger.Error(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -269,6 +289,15 @@ func queryFork(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	cf := CRFork{ImageId: id, UserId: uid}
 	fork := cf.QueryFork()
 	if err := json.NewEncoder(w).Encode(forked{Forked: fork}); err != nil {
+		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func searchImage(w http.ResponseWriter, r *http.Request, parms martini.Params) {
+	name := parms["name"]
+	result := QuerybyName(name)
+	if err := json.NewEncoder(w).Encode(result); err != nil {
 		logger.Error(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

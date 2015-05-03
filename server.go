@@ -12,8 +12,10 @@ import (
 	// "net/url"
 	"os"
 	"regexp"
+	"runtime"
 	// "strconv"
 	"strings"
+	"time"
 	//	"github.com/codegangsta/martini-contrib/auth"
 )
 
@@ -29,6 +31,9 @@ var (
 
 	dc   *client.DockerClient
 	conf Configuration
+
+	//hot image list timer
+	timer = time.NewTicker(10 * time.Second)
 )
 
 func init() {
@@ -134,6 +139,7 @@ func init() {
 	//image api
 	r.Get("/dockerapi/image/:id/name", getImageName)
 	r.Get("/dockerapi/images", listImages)
+	r.Post("/dockerapi/image/:name/search", searchImage)
 	r.Get("/dockerapi/images/:id/list", listMyImages)
 	r.Get("/dockerapi/images/:id/log", imageLogs)
 	r.Get("/dockerapi/images/:name/verify", imageVerify)
@@ -225,9 +231,31 @@ func main() {
 	//
 	flag.Parse()
 	defer dbmap.Db.Close()
-	log.Println("listening on 9000")
-	if err := http.ListenAndServe(*addr, m); err != nil {
-		log.Fatal(err)
-	}
 
+	//	timer := time.NewTicker(24 * time.Hour)
+	//	timer := time.NewTicker(10 * time.Second)
+	//	logger.Println("==============================================================")
+	//	for {
+	//		select {
+	//		case <-timer.C:
+	//			go HotTimerList()
+	//		}
+	//	}
+
+	go func() {
+		log.Println("listening on 9000")
+		//		redis_client.Del("hotimage")
+		if err := http.ListenAndServe(*addr, m); err != nil {
+			log.Fatal(err)
+		}
+		runtime.Gosched()
+	}()
+	//	//	timer := time.NewTicker(24 * time.Hour)
+	//	timer := time.NewTicker(10 * time.Second)
+	for {
+		select {
+		case <-timer.C:
+			go HotTimerList()
+		}
+	}
 }

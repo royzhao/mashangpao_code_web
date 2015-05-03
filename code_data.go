@@ -132,7 +132,7 @@ func (db *codeDB) GetAll() []Code {
 	defer db.RUnlock()
 	var res []Code_modle
 	var json_res []Code
-	_, err := db.m.Select(&res, "select * from code")
+	_, err := db.m.Select(&res, "select * from code order by star DESC")
 	checkErr(err, "error in get all")
 	for _, v := range res {
 		json_res = append(json_res, convertModle2Json(v))
