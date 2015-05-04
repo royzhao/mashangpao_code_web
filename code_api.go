@@ -11,17 +11,28 @@ import (
 )
 
 // GetCodes returns the list of codes (possibly filtered).
-func GetCodes(r *http.Request, enc Encoder, db codeDB_inter) string {
+func GetCodes(r *http.Request, enc Encoder, db codeDB_inter) (int, string) {
 	// Get the query string arguments, if any
 	qs := r.URL.Query()
-	name, description, create_date := qs.Get("name"), qs.Get("description"), qs.Get("create_date")
-
-	if name != "" || description != "" || create_date != "" {
-		// At least one filter, use Find()
-		return Must(enc.Encode(toIface(db.Find(name, description, create_date, -1))...))
+	key := qs.Get("key")
+	page := qs.Get("page")
+	num := qs.Get("num")
+	_num, err := strconv.Atoi(num)
+	if err != nil {
+		_num = 5
+	}
+	if _num == 0 {
+		_num = 5
+	}
+	_page, err := strconv.Atoi(page)
+	if err != nil {
+		_page = 1
+	}
+	if _page <= 0 {
+		_page = 1
 	}
 	// Otherwise, return all Codes
-	return Must(enc.Encode(toIface(db.GetAll())...))
+	return http.StatusOK, Must(enc.Encode(db.Find(key, _page, _num, -1)))
 }
 
 // GetCodes returns the list of codes (possibly filtered).
@@ -34,14 +45,23 @@ func GetCodesByUser(r *http.Request, enc Encoder, db codeDB_inter, parms martini
 	}
 	// Get the query string arguments, if any
 	qs := r.URL.Query()
-	name, description, create_date := qs.Get("name"), qs.Get("description"), qs.Get("create_date")
-
-	if name != "" || description != "" || create_date != "" {
-		// At least one filter, use Find()
-		return http.StatusOK, Must(enc.Encode(toIface(db.Find(name, description, create_date, id))...))
+	key, page, num := qs.Get("key"), qs.Get("page"), qs.Get("num")
+	_num, err := strconv.Atoi(num)
+	if err != nil {
+		_num = 5
 	}
-	// Otherwise, return all Codes
-	return http.StatusOK, Must(enc.Encode(toIface(db.Find("", "", "", id))...))
+	if _num == 0 {
+		_num = 5
+	}
+	_page, err := strconv.Atoi(page)
+	if err != nil {
+		_page = 1
+	}
+	if _page <= 0 {
+		_page = 1
+	}
+	// return http.StatusOK, Must(enc.Encode(toIface(db.Find(key, _page, _num, id))...))
+	return http.StatusOK, Must(enc.Encode(db.Find(key, _page, _num, id)))
 }
 
 // GetCode returns the requested Code.
