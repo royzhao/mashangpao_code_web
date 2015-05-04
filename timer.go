@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	starWeight = 2
-	forkWeight = 1
+	starWeight = 3
+	forkWeight = 2
 )
 
 type HotImages struct {

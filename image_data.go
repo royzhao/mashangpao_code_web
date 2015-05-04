@@ -86,7 +86,7 @@ func QueryImage() []CRImage {
 func QuerybyName(name string) []CRImage {
 	var image []CRImage
 	pattern := string("%" + name + "%")
-	_, err := dbmap.Select(&image, "select * from cr_image where Image_name like ?", pattern)
+	_, err := dbmap.Select(&image, "select * from cr_image where Image_name like ? or Description like ? order by Star DESC", pattern, pattern)
 	checkErr(err, "Select failed")
 	return image
 }
