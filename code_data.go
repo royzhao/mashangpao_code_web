@@ -42,6 +42,13 @@ type Code struct {
 	Star        int      `json:"star" xml:"star"`
 }
 
+type HotCode struct {
+	List  []Code `json:"list"`
+	Total int64  `json:"total"`
+	Page  int    `json:"page"`
+	Num   int    `json:"num"`
+}
+
 func (a *Code) String() string {
 	return fmt.Sprintf("%s - %s (%s)", a.Name, a.Description, a.Create_date)
 }
@@ -56,8 +63,8 @@ type codeDB struct {
 // The DB interface defines methods to manipulate the code.
 type codeDB_inter interface {
 	Get(id int) Code
-	GetAll() []Code
-	Find(name string, description string, create_time string, userid int) []Code
+	GetAll(page int, num int) HotCode
+	Find(key string, page int, num int, userid int) HotCode
 	Add(a *Code) (int, error)
 	Update(a *Code) error
 	UpdateStar(user int, codeid int) (*Code, error)
@@ -127,73 +134,65 @@ func (db *codeDB) UpdateStar(userid int, codeid int) (*Code, error) {
 }
 
 // GetAll returns all albums from the database.
-func (db *codeDB) GetAll() []Code {
-	db.RLock()
-	defer db.RUnlock()
+func (db *codeDB) GetAll(page int, num int) HotCode {
 	var res []Code_modle
-	var json_res []Code
-	_, err := db.m.Select(&res, "select * from code order by star DESC")
+	var json_res HotCode
+	json_res.Num = num
+	json_res.Page = page
+	var total int64
+	total, err := db.m.SelectInt("select count(*) from code")
+	checkErr(err, "error in get all")
+	json_res.Total = total
+	cmd := fmt.Sprintf("select * from code order by star DESC limit %d,%d", (page-1)*num, num)
+	_, err = db.m.Select(&res, cmd)
 	checkErr(err, "error in get all")
 	for _, v := range res {
-		json_res = append(json_res, convertModle2Json(v))
+		json_res.List = append(json_res.List, convertModle2Json(v))
 	}
 	return json_res
 }
 
 // Find returns albums that match the search criteria.
-func (db *codeDB) Find(name string, description string, create_date string, userid int) []Code {
-	db.RLock()
-	defer db.RUnlock()
-	var res []Code
+func (db *codeDB) Find(key string, page int, num int, userid int) HotCode {
+	var res HotCode
+	var err error
+	res.Num = num
+	res.Page = page
+	cmd := "select * from code where "
+	if key == "" {
+		if userid == -1 {
+			return db.GetAll(page, num)
+		} else {
+			cmd = fmt.Sprintf("%s user_id=%d", cmd, userid)
+		}
+	} else {
+		cmd += "name like '%" + key + "%' or description like '%" + key + "%'"
+		if userid != -1 {
+			cmd = fmt.Sprintf("%s and userid=%d", cmd, userid)
+		}
+	}
+	var total int64
+	if userid == -1 {
+		total, err = db.m.SelectInt("select count(*) from code")
+		checkErr(err, "error in get all")
+	} else {
+		tem := fmt.Sprintf("select count(*) from code where user_id=%d", userid)
+		total, err = db.m.SelectInt(tem)
+		checkErr(err, "error in get all")
+	}
+	res.Total = total
 	var res_modle []Code_modle
-	cmd := "select * from code "
-	flag := 0
-	if name != "" {
-		if flag == 0 {
-			cmd += "where "
-			flag = 1
-		}
-		cmd += "name='" + name + "'"
-	}
-	if description != "" {
-		if flag == 0 {
-			cmd += "where "
-			flag = 1
-		} else {
-			cmd += " and "
-		}
-		cmd += " description='" + description + "'"
-	}
-	if create_date != "" {
-		if flag == 0 {
-			cmd += "where "
-			flag = 1
-		} else {
-			cmd += " and "
-		}
-		cmd += " create_date='" + create_date + "'"
-	}
-	if userid != -1 {
-		if flag == 0 {
-			cmd += "where "
-			flag = 1
-		} else {
-			cmd += " and "
-		}
-		cmd = fmt.Sprintf("%s user_id=%d", cmd, userid)
-	}
-	_, err := db.m.Select(&res_modle, cmd)
+	cmd = fmt.Sprintf("%s order by star DESC limit  %d,%d", cmd, (page-1)*num, num)
+	_, err = db.m.Select(&res_modle, cmd)
 	checkErr(err, "select condition failed")
 	for _, v := range res_modle {
-		res = append(res, convertModle2Json(v))
+		res.List = append(res.List, convertModle2Json(v))
 	}
 	return res
 }
 
 // Get returns the album identified by the id, or nil.
 func (db *codeDB) Get(id int) Code {
-	db.RLock()
-	defer db.RUnlock()
 	var res Code_modle
 	cmd := fmt.Sprintf("select * from code where id =%d", id)
 	err := db.m.SelectOne(&res, cmd)
