@@ -9,8 +9,15 @@ var (
 	forkWeight = 2
 )
 
-type HotImages struct {
+type ImageList struct {
 	List []CRImage
+}
+
+type HotImages struct {
+	List  []CRImage `json:"list"`
+	Total int64     `json:"total"`
+	Page  int       `json:"page"`
+	Num   int       `json:"num"`
 }
 
 func HotTimerList() {

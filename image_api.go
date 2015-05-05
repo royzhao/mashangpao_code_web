@@ -12,28 +12,74 @@ var logger = logrus.New()
 
 //list all the images
 func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
-	//	images := QueryImage()
+	//	val, err := redis_client.Get("hotimage")
+	//	if err != nil {
+	//		logger.Error(err)
+	//		http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	}
+	//	var list HotImages
+	//	if err = json.Unmarshal(val, &list); err != nil {
+	//		logger.Error(err)
+	//		http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	}
+	//	var images []CRImage
+	//	if len(list.List) > 50 {
+	//		images = list.List[0:50]
+	//	} else {
+	//		images = list.List[0:]
+	//	}
 	//	if err := json.NewEncoder(w).Encode(images); err != nil {
 	//		logger.Error(err)
 	//		http.Error(w, err.Error(), http.StatusInternalServerError)
 	//	}
-	val, err := redis_client.Get("hotimage")
+	qs := r.URL.Query()
+	key := qs.Get("key")
+	page, err := strconv.Atoi(qs.Get("page"))
 	if err != nil {
-		logger.Error(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		page = 1
 	}
-	var list HotImages
-	if err = json.Unmarshal(val, &list); err != nil {
-		logger.Error(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if page <= 0 {
+		page = 1
 	}
-	var images []CRImage
-	if len(list.List) > 50 {
-		images = list.List[0:50]
+	num, err := strconv.Atoi(qs.Get("num"))
+	if err != nil {
+		num = 8
+	}
+	if num == 0 {
+		num = 8
+	}
+	start := (page - 1) * num
+	end := start + num
+	var list ImageList
+	var result HotImages
+	if key == "" {
+		result.Num = num
+		result.Page = page
+		val, err := redis_client.Get("hotimage")
+		if err != nil {
+			logger.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		if err = json.Unmarshal(val, &list); err != nil {
+			logger.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		if end > 50 {
+			result.List = list.List[start:50]
+		} else if end > len(list.List) {
+			result.List = list.List[start:]
+		} else {
+			result.List = list.List[start:end]
+		}
+		if len(list.List) > 50 {
+			result.Total = 50
+		} else {
+			result.Total = int64(len(list.List))
+		}
 	} else {
-		images = list.List[0:]
+		result = QuerybyName(key, page, num)
 	}
-	if err := json.NewEncoder(w).Encode(images); err != nil {
+	if err := json.NewEncoder(w).Encode(result); err != nil {
 		logger.Error(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -295,10 +341,10 @@ func queryFork(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 }
 
 func searchImage(w http.ResponseWriter, r *http.Request, parms martini.Params) {
-	name := parms["name"]
-	result := QuerybyName(name)
-	if err := json.NewEncoder(w).Encode(result); err != nil {
-		logger.Error(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	//	name := parms["name"]
+	//	result := QuerybyName(name)
+	//	if err := json.NewEncoder(w).Encode(result); err != nil {
+	//		logger.Error(err)
+	//		http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	}
 }

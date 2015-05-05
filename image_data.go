@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"gopkg.in/gorp.v1"
 	"log"
 	"strconv"
@@ -83,12 +84,22 @@ func QueryImage() []CRImage {
 }
 
 //fuzzy search of image list by image name
-func QuerybyName(name string) []CRImage {
+func QuerybyName(name string, page int, num int) HotImages {
 	var image []CRImage
 	pattern := string("%" + name + "%")
-	_, err := dbmap.Select(&image, "select * from cr_image where Image_name like ? or Description like ? order by Star DESC", pattern, pattern)
+	var cmd string
+	cmd = fmt.Sprintf("select * from cr_image where Image_name like '%s' or Description like '%s' order by Star DESC limit %d,%d", pattern, pattern, (page-1)*num, num)
+	_, err := dbmap.Select(&image, cmd)
 	checkErr(err, "Select failed")
-	return image
+	var list HotImages
+	list.List = image
+	list.Page = page
+	list.Num = num
+	cmd = fmt.Sprintf("select count(1) from cr_image where Image_name like '%s' or Description like '%s'", pattern, pattern)
+	total, err := dbmap.SelectInt(cmd)
+	checkErr(err, "error in get all")
+	list.Total = total
+	return list
 }
 
 //insert a new record into cr_image table
@@ -178,6 +189,7 @@ func (c CRImage) UpdateStar(uid int64) error {
 	//查询是否存在star记录
 	count, err := trans.SelectInt("select count(1) from cr_star where user_id = ? and image_id = ?", uid, c.ImageId)
 	if err != nil {
+		trans.Rollback()
 		return err
 	}
 	//如果存在则查出那条记录
@@ -238,11 +250,13 @@ func (c CRImage) UpdateFork(uid int64, uname string) error {
 	//检查是否已存在同名镜像
 	count, err := trans.SelectInt("select count(1) from cr_image where User_id = ? and Image_name = ?", uid, newName)
 	if err != nil || count > 0 {
+		trans.Rollback()
 		return err
 	}
 	//检查是否存在该fork记录
 	count, err = trans.SelectInt("select count(1) from cr_fork where user_id = ? and image_id = ?", uid, c.ImageId)
 	if err != nil {
+		trans.Rollback()
 		return err
 	}
 	//存在则退出
