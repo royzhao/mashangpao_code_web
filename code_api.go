@@ -10,6 +10,187 @@ import (
 	"time"
 )
 
+func GetIssues(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
+	id, err := strconv.Atoi(parms["codeid"])
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the Code with id %s does not exist", parms["userid"]))))
+	}
+	// Get the query string arguments, if any
+	qs := r.URL.Query()
+	key := qs.Get("key")
+	page := qs.Get("page")
+	num := qs.Get("num")
+	_num, err := strconv.Atoi(num)
+	if err != nil {
+		_num = 5
+	}
+	if _num == 0 {
+		_num = 5
+	}
+	_page, err := strconv.Atoi(page)
+	if err != nil {
+		_page = 1
+	}
+	if _page <= 0 {
+		_page = 1
+	}
+	// Otherwise, return all Codes
+	return http.StatusOK, Must(enc.Encode(db.FindIssues(key, _page, _num, id)))
+}
+func AddIssue(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
+	codeid, err := strconv.Atoi(parms["codeid"])
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the code with id %s does not exist", parms["codeid"]))))
+	}
+	al, err := getPostCodeIssue(r)
+	if err != nil {
+		return http.StatusBadRequest, Must(enc.Encode(
+			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the issue create failed no codeid %s", parms["codeid"]))))
+	}
+	al.Code_id = codeid
+	id, err := db.AddOneIssue(al)
+	if err != nil {
+		return http.StatusBadRequest, Must(enc.Encode(
+			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the issue create failed"))))
+	}
+	al.Id = id
+	return http.StatusCreated, Must(enc.Encode(al))
+}
+func DeleteIssue(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
+	issue, err := strconv.Atoi(parms["issueid"])
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the issue with id %s does not exist", parms["issueid"]))))
+	}
+	err = db.DeleteIssueById(issue)
+	if err != nil {
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the issue with id %s does not exist", parms["issueid"]))))
+	}
+	return http.StatusOK, fmt.Sprintf("delete issue=%d is ok", issue)
+}
+func UpdateIssue(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
+	codeid, err := strconv.Atoi(parms["codeid"])
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the code with id %s does not exist", parms["codeid"]))))
+	}
+	issue, err := strconv.Atoi(parms["issueid"])
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the issue with id %s does not exist", parms["issueid"]))))
+	}
+	al, err := getPostCodeIssue(r)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Update failed"))))
+	}
+	al.Code_id = codeid
+	al.Id = issue
+	err = db.UpdateIssueById(al)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Update failed"))))
+	}
+	return http.StatusOK, Must(enc.Encode(al))
+}
+func GetIssueComments(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
+	id, err := strconv.Atoi(parms["issueid"])
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the issue with id %s does not exist", parms["userid"]))))
+	}
+	// Get the query string arguments, if any
+	qs := r.URL.Query()
+	key := qs.Get("key")
+	page := qs.Get("page")
+	num := qs.Get("num")
+	_num, err := strconv.Atoi(num)
+	if err != nil {
+		_num = 5
+	}
+	if _num == 0 {
+		_num = 5
+	}
+	_page, err := strconv.Atoi(page)
+	if err != nil {
+		_page = 1
+	}
+	if _page <= 0 {
+		_page = 1
+	}
+	// Otherwise, return all Codes
+	return http.StatusOK, Must(enc.Encode(db.FindIssueComment(key, _page, _num, id)))
+}
+func AddIssueComment(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
+	issueid, err := strconv.Atoi(parms["issueid"])
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed"))))
+	}
+	al, err := getPostCodeIssueComment(r)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed"))))
+	}
+	al.Issue_id = issueid
+	id, err := db.AddOneIssueComment(al)
+	if err != nil {
+		return http.StatusBadRequest, Must(enc.Encode(
+			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the issue create failed"))))
+	}
+	al.Id = id
+	return http.StatusCreated, Must(enc.Encode(al))
+}
+func DeleteIssueComment(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
+	commentid, err := strconv.Atoi(parms["commentid"])
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the commentid with id %s does not exist", parms["issue"]))))
+	}
+	err = db.DeleteIssueComment(commentid)
+	if err != nil {
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the commentid with id %s does not exist", parms["issue"]))))
+	}
+	return http.StatusOK, fmt.Sprintf("delete commentid=%d is ok", commentid)
+}
+func UpdateIssueComment(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
+	issueid, err := strconv.Atoi(parms["issueid"])
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed"))))
+	}
+	commentid, err := strconv.Atoi(parms["commentid"])
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the commentid with id %s does not exist", parms["issue"]))))
+	}
+	al, err := getPostCodeIssueComment(r)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed"))))
+	}
+	al.Issue_id = issueid
+	al.Id = commentid
+	err = db.UpdateIssueComment(al)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Update failed"))))
+	}
+	return http.StatusOK, Must(enc.Encode(al))
+}
+
 // GetCodes returns the list of codes (possibly filtered).
 func GetCodes(r *http.Request, enc Encoder, db codeDB_inter) (int, string) {
 	// Get the query string arguments, if any
@@ -73,6 +254,7 @@ func GetCode(enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
 		return http.StatusNotFound, Must(enc.Encode(
 			NewError(ErrCodeNotExist, fmt.Sprintf("the Code with id %s does not exist", parms["codeid"]))))
 	}
+
 	return http.StatusOK, Must(enc.Encode(al))
 }
 
@@ -151,6 +333,27 @@ func DeleteCode(enc Encoder, db codeDB_inter, parms martini.Params) (int, string
 }
 
 // Parse the request body, load into an Code structure.
+func getPostCodeIssue(r *http.Request) (*Code_issue, error) {
+	decoder := json.NewDecoder(r.Body)
+	var t Code_issue
+	err := decoder.Decode(&t)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	t.Create_date = time.Now().String()
+	return &t, nil
+}
+func getPostCodeIssueComment(r *http.Request) (*Code_issue_comment, error) {
+	decoder := json.NewDecoder(r.Body)
+	var t Code_issue_comment
+	err := decoder.Decode(&t)
+	if err != nil {
+		return nil, err
+	}
+	t.Create_date = time.Now().String()
+	return &t, nil
+}
 func getPostCode(r *http.Request, user_id string) *Code {
 	decoder := json.NewDecoder(r.Body)
 	var t Code
@@ -159,19 +362,6 @@ func getPostCode(r *http.Request, user_id string) *Code {
 		panic(err)
 	}
 	log.Println(t)
-	// name, description := r.FormValue("name"), r.FormValue("description")
-	// id := user_id
-	// create_date := time.Now().Local().Format("2006-01-02 15:04:05 +0800")
-	// userid, err := strconv.Atoi(id)
-	// if err != nil {
-	// 	return nil
-	// }
-	// return &Code{
-	// 	Name:        name,
-	// 	Description: description,
-	// 	Create_date: create_date,
-	// 	User_id:     userid,
-	// }
 	t.User_id, err = strconv.Atoi(user_id)
 	if err != nil {
 		panic(err)

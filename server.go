@@ -111,6 +111,16 @@ func init() {
 	r.Delete(`/api/code/:userid/:codeid`, DeleteCode)
 
 	r.Put(`/api/code/star/:userid/:codeid`, UpdateCodeStar)
+	//code issue
+	r.Get(`/api/code/:codeid/issues`, GetIssues)
+	r.Post(`/api/code/:userid/:codeid/issue`, AddIssue)
+	r.Put(`/api/code/:userid/:codeid/issue/:issueid`, UpdateIssue)
+	r.Delete(`/api/code/:userid/:codeid/issue/:issueid`, DeleteIssue)
+	//code issue comment
+	r.Get(`/api/issue/:issueid/comments`, GetIssueComments)
+	r.Post(`/api/issue/:userid/:issueid/comment`, AddIssueComment)
+	r.Put(`/api/issue/:userid/:issueid/comment/:commentid`, UpdateIssueComment)
+	r.Delete(`/api/issue/:userid/:issueid/comment/:commentid`, DeleteIssueComment)
 	//得到代码的具体步骤
 	//得到全部的代码步骤元数据
 	r.Get(`/api/code/:codeid/step`, GetCodeSteps)

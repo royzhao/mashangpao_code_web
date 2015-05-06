@@ -16,6 +16,38 @@ var (
 	ErrAlreadyExists = errors.New("code already exists")
 )
 
+type Code_issue struct {
+	Id          int    `json:"id"`
+	Create_date string `json:"create_date"`
+	Code_id     int    `json:"code_id"`
+	Author      int    `json:"author"`
+	Title       string `json:"title"`
+	Content     string `json:"content"`
+	Status      int    `json:"status"`
+}
+
+type Code_issue_comment struct {
+	Id          int    `json:"id"`
+	Create_date string `json:"create_date"`
+	Issue_id    int    `json:"issue_id"`
+	Reply_to    int    `json:"reply_to"`
+	Author      int    `json"author"`
+	Content     string `json:"content"`
+	Status      int    `json:"status"`
+}
+type Code_issue_comment_json struct {
+	Issue Code_issue           `json:"issue"`
+	List  []Code_issue_comment `json:"list"`
+	Total int64                `json:"total"`
+	Page  int                  `json:"page"`
+	Num   int                  `json:"num"`
+}
+type Code_issue_json struct {
+	List  []Code_issue `json:"list"`
+	Total int64        `json:"total"`
+	Page  int          `json:"page"`
+	Num   int          `json:"num"`
+}
 type Code_modle struct {
 	Id          int    `db:"id"`
 	Create_date string `db:"create_date"`
@@ -69,10 +101,167 @@ type codeDB_inter interface {
 	Update(a *Code) error
 	UpdateStar(user int, codeid int) (*Code, error)
 	Delete(id int)
+
+	//issue process
+	GetIssueTotalNum(codeid int, key string) int64
+	GetIssueById(issue_id int) Code_issue
+	FindIssues(key string, page int, num int, codeid int) Code_issue_json
+	DeleteIssueById(issue_id int) error
+	UpdateIssueById(issue *Code_issue) error
+	AddOneIssue(issue *Code_issue) (int, error)
+	//issue comment process
+	GetIssueCommentTotalNum(issue int, key string) int64
+	FindIssueComment(key string, page int, num int, issue_id int) Code_issue_comment_json
+	DeleteIssueComment(comment_id int) error
+	UpdateIssueComment(comment *Code_issue_comment) error
+	AddOneIssueComment(issue *Code_issue_comment) (int, error)
 }
 
 // The one and only database instance.
 var code_db codeDB_inter
+
+func (db *codeDB) GetIssueCommentTotalNum(issue int, key string) int64 {
+	count_cmd := fmt.Sprintf("select count(*) from code_issue_comment where status=1 and issue_id=%d", issue)
+	if key != "" {
+		count_cmd += " and title like '%" + key + "%' or content like '%" + key + "%'"
+	}
+	total, err := db.m.SelectInt(count_cmd)
+	checkErr(err, "select condition failed")
+	return total
+}
+func (db *codeDB) FindIssueComment(key string, page int, num int, issue_id int) Code_issue_comment_json {
+	var res Code_issue_comment_json
+	var err error
+	var total int64
+	res.Num = num
+	res.Page = page
+	cmd := "select * from code_issue_comment where status=1 "
+	if key == "" {
+		if issue_id == -1 {
+			return res
+		} else {
+			cmd = fmt.Sprintf("%s and issue_id=%d", cmd, issue_id)
+			total = db.GetIssueCommentTotalNum(issue_id, "")
+		}
+	} else {
+		cmd += "and title like '%" + key + "%' or content like '%" + key + "%'"
+		total = db.GetIssueCommentTotalNum(issue_id, key)
+		if issue_id != -1 {
+			cmd = fmt.Sprintf("%s and issue_id=%d", cmd, issue_id)
+		} else {
+			return res
+		}
+	}
+
+	res.Total = total
+	issue := db.GetIssueById(issue_id)
+	res.Issue = issue
+	var res_modle []Code_issue_comment
+	cmd = fmt.Sprintf("%s order by create_date DESC limit  %d,%d", cmd, (page-1)*num, num)
+	_, err = db.m.Select(&res_modle, cmd)
+	checkErr(err, "select condition failed")
+	res.List = res_modle
+	return res
+}
+func (db *codeDB) DeleteIssueComment(comment_id int) error {
+	cmd := "update code_issue_comment set status=2 "
+	cmd = fmt.Sprintf("%s where id=%d", cmd, comment_id)
+	_, err := db.m.Exec(cmd)
+	if checkErr(err, "Update failed") == true {
+		return err
+	}
+	return nil
+}
+func (db *codeDB) UpdateIssueComment(comment *Code_issue_comment) error {
+	count, err := db.m.Update(comment)
+	if checkErr(err, "Update failed") == true {
+		return err
+	}
+	log.Println("Rows updated:", count)
+	return nil
+}
+func (db *codeDB) AddOneIssueComment(issue *Code_issue_comment) (int, error) {
+	issue.Create_date = time.Now().String()
+	issue.Status = 1
+	err := db.m.Insert(issue)
+	if checkErr(err, "Insert failed") == true {
+		return 0, err
+	}
+	return issue.Id, nil
+}
+func (db *codeDB) GetIssueTotalNum(codeid int, key string) int64 {
+	count_cmd := fmt.Sprintf("select count(*) from code_issue where status=1 and code_id=%d", codeid)
+	if key != "" {
+		count_cmd += " and title like '%" + key + "%' or content like '%" + key + "%'"
+	}
+	total, err := db.m.SelectInt(count_cmd)
+	checkErr(err, "select condition failed")
+	return total
+}
+func (db *codeDB) FindIssues(key string, page int, num int, codeid int) Code_issue_json {
+	var res Code_issue_json
+	var err error
+	res.Num = num
+	res.Page = page
+	var total int64
+	cmd := "select * from code_issue where status=1 "
+	if key == "" {
+		if codeid == -1 {
+			return res
+		} else {
+			cmd = fmt.Sprintf("%s and code_id=%d", cmd, codeid)
+			total = db.GetIssueTotalNum(codeid, "")
+		}
+	} else {
+		cmd += "and title like '%" + key + "%' or content like '%" + key + "%'"
+		total = db.GetIssueTotalNum(codeid, key)
+		if codeid != -1 {
+			cmd = fmt.Sprintf("%s and code_id=%d", cmd, codeid)
+		} else {
+			return res
+		}
+	}
+	res.Total = total
+	var res_modle []Code_issue
+	cmd = fmt.Sprintf("%s order by create_date DESC limit  %d,%d", cmd, (page-1)*num, num)
+	_, err = db.m.Select(&res_modle, cmd)
+	checkErr(err, "select condition failed")
+	res.List = res_modle
+	return res
+}
+func (db *codeDB) GetIssueById(issue_id int) Code_issue {
+	var res Code_issue
+	cmd := fmt.Sprintf("select * from code_issue where id =%d", issue_id)
+	err := db.m.SelectOne(&res, cmd)
+	checkErr(err, cmd+" failed")
+	return res
+}
+func (db *codeDB) DeleteIssueById(issue_id int) error {
+	cmd := "update code_issue set status=2 "
+	cmd = fmt.Sprintf("%s where id=%d", cmd, issue_id)
+	_, err := db.m.Exec(cmd)
+	if checkErr(err, "Update failed") == true {
+		return err
+	}
+	return nil
+}
+func (db *codeDB) UpdateIssueById(issue *Code_issue) error {
+	count, err := db.m.Update(issue)
+	if checkErr(err, "Update failed") == true {
+		return err
+	}
+	log.Println("Rows updated:", count)
+	return nil
+}
+func (db *codeDB) AddOneIssue(issue *Code_issue) (int, error) {
+	issue.Create_date = time.Now().String()
+	issue.Status = 1
+	err := db.m.Insert(issue)
+	if checkErr(err, "Insert failed") == true {
+		return 0, err
+	}
+	return issue.Id, nil
+}
 
 //add star
 func (db *codeDB) UpdateStar(userid int, codeid int) (*Code, error) {
@@ -230,31 +419,27 @@ func (db *codeDB) Add(a *Code) (int, error) {
 // Update changes the album identified by the id. It returns an error if the
 // updated album is a duplicate.
 func (db *codeDB) Update(a *Code) error {
-	db.Lock()
-	defer db.Unlock()
-	flag := 1
-	cmd := "update code set "
-	if a.Name != "" {
-		log.Println("name: " + a.Name)
-		cmd += " name='" + a.Name + "'"
-		flag = 0
-	}
-	if a.Description != "" {
-		log.Println("description: " + a.Description)
-		if flag == 0 {
-			cmd += ","
-		}
-		cmd += " description='" + a.Description + "'"
-		flag = 0
-	}
-	if flag == 1 {
-		return nil
-	}
-	cmd = fmt.Sprintf("%s where id=%d", cmd, a.Id)
-	count, err := db.m.Exec(cmd)
-	if checkErr(err, "Update failed") == true {
-		return err
-	}
+	// flag := 1
+	// cmd := "update code set "
+	// if a.Name != "" {
+	// 	log.Println("name: " + a.Name)
+	// 	cmd += " name='" + a.Name + "'"
+	// 	flag = 0
+	// }
+	// if a.Description != "" {
+	// 	log.Println("description: " + a.Description)
+	// 	if flag == 0 {
+	// 		cmd += ","
+	// 	}
+	// 	cmd += " description='" + a.Description + "'"
+	// 	flag = 0
+	// }
+	// if flag == 1 {
+	// 	return nil
+	// }
+	// cmd = fmt.Sprintf("%s where id=%d", cmd, a.Id)
+	count, err := db.m.Update(a)
+	checkErr(err, "Update failed")
 	log.Println("Rows updated:", count)
 	return nil
 }
@@ -314,6 +499,8 @@ func init_code(db *gorp.DbMap) {
 	// code_db.Add(&Code{Name: "zpl3", Description: "Reign3", User_id: 1})
 	db.AddTableWithName(Code_modle{}, "code").SetKeys(true, "Id")
 	db.AddTableWithName(CodeStar{}, "code_star").SetKeys(true, "StarId")
+	db.AddTableWithName(Code_issue{}, "code_issue").SetKeys(true, "Id")
+	db.AddTableWithName(Code_issue_comment{}, "code_issue_comment").SetKeys(true, "Id")
 }
 
 func convertJson2Modle(code Code) Code_modle {
