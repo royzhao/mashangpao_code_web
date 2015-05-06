@@ -59,10 +59,12 @@ func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 		if err != nil {
 			logger.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		if err = json.Unmarshal(val, &list); err != nil {
 			logger.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		if end > 50 {
 			result.List = list.List[start:50]

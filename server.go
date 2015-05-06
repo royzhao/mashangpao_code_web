@@ -153,7 +153,9 @@ func init() {
 	r.Get("/dockerapi/star/:uid/:id", queryStarid)
 	r.Get("/dockerapi/fork/:uid/:id", queryFork)
 	r.Post("/api/sso/islogin", isLogin)
-	r.Post("/api/sso/logout", logout)
+	r.Get("/api/message/query/:id", queryNotice)
+	r.Post("/api/message/add", addMessage)
+	//	r.Post("/api/sso/logout", logout)
 
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))

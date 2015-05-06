@@ -47,9 +47,9 @@ func isLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func logout(w http.ResponseWriter, r *http.Request) {
+//func logout(w http.ResponseWriter, r *http.Request) {
 
-}
+//}
 
 //func main() {
 //	c, err := client.NewSSOClient(ssoEndpoint)
