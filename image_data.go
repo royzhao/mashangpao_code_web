@@ -29,11 +29,13 @@ type CRImage struct {
 }
 
 type CRComments struct {
-	CommentId int64  `db:"comment_id"`
-	ImageID   int64  `db:"image_id"`
-	Author    string `db:"author"`
-	Reply     string `db:"replyto"`
-	Content   string `db:"content"`
+	Id      int64  `db:"id"`
+	Issue   int64  `db:"issue_id"`
+	Author  int64  `db:"author"`
+	Reply   int64  `db:"replyto"`
+	Content string `db:"content"`
+	Date    string `db:"date"`
+	Status  int8   `db:"status"`
 }
 
 type CRStar struct {
@@ -328,7 +330,7 @@ func (c CRFork) QueryFork() bool {
 
 func init_imangeDb(db *gorp.DbMap) {
 	db.AddTableWithName(CRImage{}, "cr_image").SetKeys(true, "ImageId")
-	db.AddTableWithName(CRComments{}, "cr_comment").SetKeys(true, "CommentId")
+	db.AddTableWithName(CRComments{}, "comments").SetKeys(true, "Id")
 	db.AddTableWithName(CRStar{}, "cr_star").SetKeys(true, "StarId")
 	db.AddTableWithName(CRFork{}, "cr_fork").SetKeys(true, "ForkId")
 

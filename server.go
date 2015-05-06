@@ -33,7 +33,7 @@ var (
 	conf Configuration
 
 	//hot image list timer
-	timer = time.NewTicker(60 * time.Second)
+	timer = time.NewTicker(12 * time.Hour)
 )
 
 func init() {
