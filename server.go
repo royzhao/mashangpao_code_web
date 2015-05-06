@@ -164,6 +164,7 @@ func init() {
 	r.Get("/dockerapi/fork/:uid/:id", queryFork)
 	r.Post("/api/sso/islogin", isLogin)
 	r.Get("/api/message/query/:id", queryNotice)
+	r.Post("/api/message/read", readMessageAPI)
 	r.Post("/api/message/add", addMessage)
 	//	r.Post("/api/sso/logout", logout)
 

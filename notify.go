@@ -41,7 +41,7 @@ func NewMessage(replyTo int64, author int64, content string, level int8) (Messag
 	return m, err
 }
 
-func (m Message) ReadMessage() error {
+func (m Message) readMessage() error {
 	m.Status = 2
 	_, err := dbmap.Update(m)
 	return err
