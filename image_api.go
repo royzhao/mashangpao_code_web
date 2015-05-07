@@ -2,19 +2,19 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/martini"
+	"log"
 	"net/http"
-	"fmt"
 	"strconv"
 	"time"
-	"log"
 )
 
 var logger = logrus.New()
 
-func GetImageIssues(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
-	id, err := strconv.ParseInt(parms["imageid"],10,64)
+func GetImageIssues(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
+	id, err := strconv.ParseInt(parms["imageid"], 10, 64)
 	if err != nil {
 		// Invalid id, or does not exist
 		return http.StatusNotFound, Must(enc.Encode(
@@ -43,7 +43,7 @@ func GetImageIssues(r *http.Request, enc Encoder,  parms martini.Params) (int, s
 	return http.StatusOK, Must(enc.Encode(FindImageIssues(key, _page, _num, id)))
 }
 func AddImageIssue(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
-	imageid, err := strconv.ParseInt(parms["imageid"],10,64)
+	imageid, err := strconv.ParseInt(parms["imageid"], 10, 64)
 	if err != nil {
 		// Invalid id, or does not exist
 		return http.StatusNotFound, Must(enc.Encode(
@@ -61,22 +61,22 @@ func AddImageIssue(r *http.Request, enc Encoder, parms martini.Params) (int, str
 			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the issue create failed"))))
 	}
 	al.Id = int64(id)
-	go func(){
+	go func() {
 		var obj CRImage
-		image :=obj.Querylog(imageid)
+		image := obj.Querylog(imageid)
 		if image.ImageId == 0 {
 			// Invalid id, or does not exist
 			return
 		}
-		_,err :=NewMessage(image.UserId, al.Author, fmt.Sprintf("you ren pinglun click <a href='/dashboard.html#/image/%d/issue/%d'>click to read</a>",imageid,id), 1)
-		if err != nil{
+		_, err := NewMessage(image.UserId, al.Author, fmt.Sprintf("有人评论了您的讨论，<a href='/dashboard.html#/image/%d/issue/%d' ng-click='read($index)'>click to read</a>", imageid, id), 1)
+		if err != nil {
 			log.Println(err)
 		}
 	}()
 	return http.StatusCreated, Must(enc.Encode(al))
 }
-func DeleteImageIssue(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
-	issue, err := strconv.ParseInt(parms["issueid"],10,64)
+func DeleteImageIssue(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
+	issue, err := strconv.ParseInt(parms["issueid"], 10, 64)
 	if err != nil {
 		// Invalid id, or does not exist
 		return http.StatusNotFound, Must(enc.Encode(
@@ -89,14 +89,14 @@ func DeleteImageIssue(r *http.Request, enc Encoder,  parms martini.Params) (int,
 	}
 	return http.StatusOK, fmt.Sprintf("delete issue=%d is ok", issue)
 }
-func UpdateImageIssue(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
-	imageid, err := strconv.ParseInt(parms["imageid"],10,64)
+func UpdateImageIssue(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
+	imageid, err := strconv.ParseInt(parms["imageid"], 10, 64)
 	if err != nil {
 		// Invalid id, or does not exist
 		return http.StatusNotFound, Must(enc.Encode(
 			NewError(ErrCodeNotExist, fmt.Sprintf("the image with id %s does not exist", parms["imageid"]))))
 	}
-	issue, err := strconv.ParseInt(parms["issueid"],10,64)
+	issue, err := strconv.ParseInt(parms["issueid"], 10, 64)
 	if err != nil {
 		// Invalid id, or does not exist
 		return http.StatusNotFound, Must(enc.Encode(
@@ -116,8 +116,8 @@ func UpdateImageIssue(r *http.Request, enc Encoder,  parms martini.Params) (int,
 	}
 	return http.StatusOK, Must(enc.Encode(al))
 }
-func GetImageIssueComments(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
-	id, err := strconv.ParseInt(parms["issueid"],10,64)
+func GetImageIssueComments(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
+	id, err := strconv.ParseInt(parms["issueid"], 10, 64)
 	if err != nil {
 		// Invalid id, or does not exist
 		return http.StatusNotFound, Must(enc.Encode(
@@ -145,8 +145,8 @@ func GetImageIssueComments(r *http.Request, enc Encoder,  parms martini.Params) 
 	// Otherwise, return all Codes
 	return http.StatusOK, Must(enc.Encode(FindImageIssueComment(key, _page, _num, id)))
 }
-func AddImageIssueComment(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
-	issueid, err := strconv.ParseInt(parms["issueid"],10,64)
+func AddImageIssueComment(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
+	issueid, err := strconv.ParseInt(parms["issueid"], 10, 64)
 	if err != nil {
 		return http.StatusOK, Must(enc.Encode(
 			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed issueid is not accepted"))))
@@ -163,18 +163,18 @@ func AddImageIssueComment(r *http.Request, enc Encoder,  parms martini.Params) (
 			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the issue create failed"))))
 	}
 	al.Id = id
-	go func(){
-		issue :=GetImageIssueById(issueid)
-		_,err :=NewMessage(al.Reply_to, al.Author,
-				 fmt.Sprintf("someone attend <a href='/dashboard.html#/image/%d/issue/%d'>click to read</a>",issue.Image_id,issue.Id), 1)
-		if err != nil{
+	go func() {
+		issue := GetImageIssueById(issueid)
+		_, err := NewMessage(al.Reply_to, al.Author,
+			fmt.Sprintf("someone attend <a href='/dashboard.html#/image/%d/issue/%d' ng-click='read($index)'>click to read</a>", issue.Image_id, issue.Id), 1)
+		if err != nil {
 			log.Println(err)
 		}
 	}()
 	return http.StatusCreated, Must(enc.Encode(al))
 }
-func DeleteImageIssueComment(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
-	commentid, err := strconv.ParseInt(parms["commentid"],10,64)
+func DeleteImageIssueComment(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
+	commentid, err := strconv.ParseInt(parms["commentid"], 10, 64)
 	if err != nil {
 		// Invalid id, or does not exist
 		return http.StatusNotFound, Must(enc.Encode(
@@ -187,13 +187,13 @@ func DeleteImageIssueComment(r *http.Request, enc Encoder,  parms martini.Params
 	}
 	return http.StatusOK, fmt.Sprintf("delete commentid=%d is ok", commentid)
 }
-func UpdateImageIssueComment(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
-	issueid, err := strconv.ParseInt(parms["issueid"],10,64)
+func UpdateImageIssueComment(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
+	issueid, err := strconv.ParseInt(parms["issueid"], 10, 64)
 	if err != nil {
 		return http.StatusOK, Must(enc.Encode(
 			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed"))))
 	}
-	commentid, err := strconv.ParseInt(parms["commentid"],10,64)
+	commentid, err := strconv.ParseInt(parms["commentid"], 10, 64)
 	if err != nil {
 		// Invalid id, or does not exist
 		return http.StatusNotFound, Must(enc.Encode(

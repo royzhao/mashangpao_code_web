@@ -58,14 +58,14 @@ func AddIssue(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Param
 			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the issue create failed"))))
 	}
 	al.Id = id
-	go func(){
-		code :=db.Get(codeid)
+	go func() {
+		code := db.Get(codeid)
 		if code.Id == 0 {
 			// Invalid id, or does not exist
 			return
 		}
-		_,err :=NewMessage(int64(code.User_id), int64(al.Author), fmt.Sprintf("you ren pinglun click <a href='/dashboard.html#/code/%d/issue/%d'>click to read</a>",codeid,id), 1)
-		if err != nil{
+		_, err := NewMessage(int64(code.User_id), int64(al.Author), fmt.Sprintf("you ren pinglun click <a href='/dashboard.html#/code/%d/issue/%d' ng-click='read($index)'>click to read</a>", codeid, id), 1)
+		if err != nil {
 			log.Println(err)
 		}
 	}()
@@ -159,11 +159,11 @@ func AddIssueComment(r *http.Request, enc Encoder, db codeDB_inter, parms martin
 			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the issue create failed"))))
 	}
 	al.Id = id
-	go func(){
-		issue :=db.GetIssueById(issueid)
-		_,err :=NewMessage(int64(al.Reply_to), int64(al.Author),
-				 fmt.Sprintf("someone attend <a href='/dashboard.html#/code/%d/issue/%d'>click to read</a>",issue.Code_id,issue.Id), 1)
-		if err != nil{
+	go func() {
+		issue := db.GetIssueById(issueid)
+		_, err := NewMessage(int64(al.Reply_to), int64(al.Author),
+			fmt.Sprintf("someone attend <a href='/dashboard.html#/code/%d/issue/%d' ng-click='read($index)'>click to read</a>", issue.Code_id, issue.Id), 1)
+		if err != nil {
 			log.Println(err)
 		}
 	}()
