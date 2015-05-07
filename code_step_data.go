@@ -30,10 +30,10 @@ type Code_step struct {
 	Id          int    `json:"id" xml:"id,attr"`
 	Create_date string `json:"create_date" xml:"create_date"`
 	Name        string `json:"name" xml:"name"`
-	Description string `json:"description" xml:"description"`
+	Description string `json:"description" xml:"description" `
 	Code_id     int    `json:"code_id" xml:"code_id"`
 	Image_id    int    `json:"image_id" xml:"image_id"`
-	Code_name   string `json:"code_name" xml:"code_name"`
+	Code_name   string `json:"code_name" xml:"code_name" `
 	Status      int    `json:"status" xml:"status"`
 	Work_dir    string `json:"work_dir" xml:"work_dir"`
 }

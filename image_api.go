@@ -5,10 +5,214 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/martini"
 	"net/http"
+	"fmt"
 	"strconv"
+	"time"
+	"log"
 )
 
 var logger = logrus.New()
+
+func GetImageIssues(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
+	id, err := strconv.ParseInt(parms["imageid"],10,64)
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the image with id %s does not exist", parms["userid"]))))
+	}
+	// Get the query string arguments, if any
+	qs := r.URL.Query()
+	key := qs.Get("key")
+	page := qs.Get("page")
+	num := qs.Get("num")
+	_num, err := strconv.Atoi(num)
+	if err != nil {
+		_num = 5
+	}
+	if _num == 0 {
+		_num = 5
+	}
+	_page, err := strconv.Atoi(page)
+	if err != nil {
+		_page = 1
+	}
+	if _page <= 0 {
+		_page = 1
+	}
+	// Otherwise, return all Codes
+	return http.StatusOK, Must(enc.Encode(FindImageIssues(key, _page, _num, id)))
+}
+func AddImageIssue(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
+	imageid, err := strconv.ParseInt(parms["imageid"],10,64)
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the image with id %s does not exist", parms["imageid"]))))
+	}
+	al, err := getPostImageIssue(r)
+	if err != nil {
+		return http.StatusBadRequest, Must(enc.Encode(
+			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the issue create failed no image %s", parms["imageid"]))))
+	}
+	al.Image_id = imageid
+	id, err := AddOneImageIssue(al)
+	if err != nil {
+		return http.StatusBadRequest, Must(enc.Encode(
+			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the issue create failed"))))
+	}
+	al.Id = int64(id)
+	go func(){
+		var obj CRImage
+		image :=obj.Querylog(imageid)
+		if image.ImageId == 0 {
+			// Invalid id, or does not exist
+			return
+		}
+		_,err :=NewMessage(image.UserId, al.Author, fmt.Sprintf("you ren pinglun click <a href='/dashboard.html#/image/%d/issue/%d'>click to read</a>",imageid,id), 1)
+		if err != nil{
+			log.Println(err)
+		}
+	}()
+	return http.StatusCreated, Must(enc.Encode(al))
+}
+func DeleteImageIssue(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
+	issue, err := strconv.ParseInt(parms["issueid"],10,64)
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the issue with id %s does not exist", parms["issueid"]))))
+	}
+	err = DeleteImageIssueById(issue)
+	if err != nil {
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the issue with id %s does not exist", parms["issueid"]))))
+	}
+	return http.StatusOK, fmt.Sprintf("delete issue=%d is ok", issue)
+}
+func UpdateImageIssue(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
+	imageid, err := strconv.ParseInt(parms["imageid"],10,64)
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the image with id %s does not exist", parms["imageid"]))))
+	}
+	issue, err := strconv.ParseInt(parms["issueid"],10,64)
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the issue with id %s does not exist", parms["issueid"]))))
+	}
+	al, err := getPostImageIssue(r)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Update failed"))))
+	}
+	al.Image_id = imageid
+	al.Id = issue
+	err = UpdateImageIssueById(al)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Update failed"))))
+	}
+	return http.StatusOK, Must(enc.Encode(al))
+}
+func GetImageIssueComments(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
+	id, err := strconv.ParseInt(parms["issueid"],10,64)
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the issue with id %s does not exist", parms["userid"]))))
+	}
+	// Get the query string arguments, if any
+	qs := r.URL.Query()
+	key := qs.Get("key")
+	page := qs.Get("page")
+	num := qs.Get("num")
+	_num, err := strconv.Atoi(num)
+	if err != nil {
+		_num = 5
+	}
+	if _num == 0 {
+		_num = 5
+	}
+	_page, err := strconv.Atoi(page)
+	if err != nil {
+		_page = 1
+	}
+	if _page <= 0 {
+		_page = 1
+	}
+	// Otherwise, return all Codes
+	return http.StatusOK, Must(enc.Encode(FindImageIssueComment(key, _page, _num, id)))
+}
+func AddImageIssueComment(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
+	issueid, err := strconv.ParseInt(parms["issueid"],10,64)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed issueid is not accepted"))))
+	}
+	al, err := getPostImageIssueComment(r)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed  post not accepted"))))
+	}
+	al.Issue_id = issueid
+	id, err := AddOneImageIssueComment(al)
+	if err != nil {
+		return http.StatusBadRequest, Must(enc.Encode(
+			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the issue create failed"))))
+	}
+	al.Id = id
+	go func(){
+		issue :=GetImageIssueById(issueid)
+		_,err :=NewMessage(al.Reply_to, al.Author,
+				 fmt.Sprintf("someone attend <a href='/dashboard.html#/image/%d/issue/%d'>click to read</a>",issue.Image_id,issue.Id), 1)
+		if err != nil{
+			log.Println(err)
+		}
+	}()
+	return http.StatusCreated, Must(enc.Encode(al))
+}
+func DeleteImageIssueComment(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
+	commentid, err := strconv.ParseInt(parms["commentid"],10,64)
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the commentid with id %s does not exist", parms["issue"]))))
+	}
+	err = DeleteDataImageIssueComment(commentid)
+	if err != nil {
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the commentid with id %s does not exist", parms["issue"]))))
+	}
+	return http.StatusOK, fmt.Sprintf("delete commentid=%d is ok", commentid)
+}
+func UpdateImageIssueComment(r *http.Request, enc Encoder,  parms martini.Params) (int, string) {
+	issueid, err := strconv.ParseInt(parms["issueid"],10,64)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed"))))
+	}
+	commentid, err := strconv.ParseInt(parms["commentid"],10,64)
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the commentid with id %s does not exist", parms["issue"]))))
+	}
+	al, err := getPostImageIssueComment(r)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed"))))
+	}
+	al.Issue_id = issueid
+	al.Id = commentid
+	err = UpdateDataImageIssueComment(al)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("Update failed"))))
+	}
+	return http.StatusOK, Must(enc.Encode(al))
+}
 
 //list all the images
 func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
@@ -349,4 +553,27 @@ func searchImage(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	//		logger.Error(err)
 	//		http.Error(w, err.Error(), http.StatusInternalServerError)
 	//	}
+}
+
+// Parse the request body, load into an Code structure.
+func getPostImageIssue(r *http.Request) (*Image_issue, error) {
+	decoder := json.NewDecoder(r.Body)
+	var t Image_issue
+	err := decoder.Decode(&t)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	t.Create_date = time.Now().String()
+	return &t, nil
+}
+func getPostImageIssueComment(r *http.Request) (*Image_issue_comment, error) {
+	decoder := json.NewDecoder(r.Body)
+	var t Image_issue_comment
+	err := decoder.Decode(&t)
+	if err != nil {
+		return nil, err
+	}
+	t.Create_date = time.Now().String()
+	return &t, nil
 }

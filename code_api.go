@@ -58,6 +58,17 @@ func AddIssue(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Param
 			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the issue create failed"))))
 	}
 	al.Id = id
+	go func(){
+		code :=db.Get(codeid)
+		if code.Id == 0 {
+			// Invalid id, or does not exist
+			return
+		}
+		_,err :=NewMessage(int64(code.User_id), int64(al.Author), fmt.Sprintf("you ren pinglun click <a href='/dashboard.html#/code/%d/issue/%d'>click to read</a>",codeid,id), 1)
+		if err != nil{
+			log.Println(err)
+		}
+	}()
 	return http.StatusCreated, Must(enc.Encode(al))
 }
 func DeleteIssue(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {
@@ -134,12 +145,12 @@ func AddIssueComment(r *http.Request, enc Encoder, db codeDB_inter, parms martin
 	issueid, err := strconv.Atoi(parms["issueid"])
 	if err != nil {
 		return http.StatusOK, Must(enc.Encode(
-			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed"))))
+			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed issueid is not accepted"))))
 	}
 	al, err := getPostCodeIssueComment(r)
 	if err != nil {
 		return http.StatusOK, Must(enc.Encode(
-			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed"))))
+			NewError(ErrCodeNotExist, fmt.Sprintf("Add failed  post not accepted"))))
 	}
 	al.Issue_id = issueid
 	id, err := db.AddOneIssueComment(al)
@@ -148,6 +159,14 @@ func AddIssueComment(r *http.Request, enc Encoder, db codeDB_inter, parms martin
 			NewError(ErrCodeAlreadyExists, fmt.Sprintf("the issue create failed"))))
 	}
 	al.Id = id
+	go func(){
+		issue :=db.GetIssueById(issueid)
+		_,err :=NewMessage(int64(al.Reply_to), int64(al.Author),
+				 fmt.Sprintf("someone attend <a href='/dashboard.html#/code/%d/issue/%d'>click to read</a>",issue.Code_id,issue.Id), 1)
+		if err != nil{
+			log.Println(err)
+		}
+	}()
 	return http.StatusCreated, Must(enc.Encode(al))
 }
 func DeleteIssueComment(r *http.Request, enc Encoder, db codeDB_inter, parms martini.Params) (int, string) {

@@ -168,6 +168,17 @@ func init() {
 	r.Post("/api/message/add", addMessage)
 	//	r.Post("/api/sso/logout", logout)
 
+	//code issue
+	r.Get(`/api/image/:imageid/issues`, GetImageIssues)
+	r.Post(`/api/image/:userid/:imageid/issue`, AddImageIssue)
+	r.Put(`/api/image/:userid/:imageid/issue/:issueid`, UpdateImageIssue)
+	r.Delete(`/api/image/:userid/:imageid/issue/:issueid`, DeleteImageIssue)
+	//code issue comment
+	r.Get(`/api/image/issue/:issueid/comments`, GetImageIssueComments)
+	r.Post(`/api/image/issue/:userid/:issueid/comment`, AddImageIssueComment)
+	r.Put(`/api/image/issue/:userid/:issueid/comment/:commentid`, UpdateImageIssueComment)
+	r.Delete(`/api/image/issue/:userid/:issueid/comment/:commentid`, DeleteImageIssueComment)
+
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))
 	m.MapTo(code_step_db, (*codeStepDB_inter)(nil))

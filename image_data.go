@@ -11,6 +11,39 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type Image_issue struct {
+	Id          int64    `json:"id"`
+	Create_date string `json:"create_date"`
+	Image_id     int64    `json:"image_id"`
+	Author      int64   `json:"author"`
+	Title       string `json:"title"`
+	Content     string `json:"content"`
+	Status      int    `json:"status"`
+}
+
+type Image_issue_comment struct {
+	Id          int64    `json:"id"`
+	Create_date string `json:"create_date"`
+	Issue_id    int64    `json:"issue_id"`
+	Reply_to    int64    `json:"reply_to"`
+	Author      int64    `json"author"`
+	Content     string `json:"content"`
+	Status      int    `json:"status"`
+}
+type Image_issue_comment_json struct {
+	Issue Image_issue           `json:"issue"`
+	List  []Image_issue_comment `json:"list"`
+	Total int64                `json:"total"`
+	Page  int                  `json:"page"`
+	Num   int                  `json:"num"`
+}
+type Image_issue_json struct {
+	List  []Image_issue `json:"list"`
+	Total int64        `json:"total"`
+	Page  int          `json:"page"`
+	Num   int          `json:"num"`
+}
+
 type CRImage struct {
 	// db tag lets you specify the column name if it differs from the struct field.
 	// remember to keep the first letter of the fields in the struct uppercase
@@ -62,6 +95,149 @@ type SqlOperation interface {
 	UpdateFork(uid int64, uname string) error
 }
 
+func GetImageIssueCommentTotalNum(issue int64, key string) int64 {
+	count_cmd := fmt.Sprintf("select count(*) from image_issue_comment where status=1 and issue_id=%d", issue)
+	if key != "" {
+		count_cmd += " and title like '%" + key + "%' or content like '%" + key + "%'"
+	}
+	total, err := dbmap.SelectInt(count_cmd)
+	checkErr(err, "select condition failed")
+	return total
+}
+func FindImageIssueComment(key string, page int, num int, issue_id int64) Image_issue_comment_json {
+	var res Image_issue_comment_json
+	var err error
+	var total int64
+	res.Num = num
+	res.Page = page
+	cmd := "select * from image_issue_comment where status=1 "
+	if key == "" {
+		if issue_id == -1 {
+			return res
+		} else {
+			cmd = fmt.Sprintf("%s and issue_id=%d", cmd, issue_id)
+			total = GetImageIssueCommentTotalNum(issue_id, "")
+		}
+	} else {
+		cmd += "and title like '%" + key + "%' or content like '%" + key + "%'"
+		total = GetImageIssueCommentTotalNum(issue_id, key)
+		if issue_id != -1 {
+			cmd = fmt.Sprintf("%s and issue_id=%d", cmd, issue_id)
+		} else {
+			return res
+		}
+	}
+
+	res.Total = total
+	issue := GetImageIssueById(issue_id)
+	res.Issue = issue
+	var res_modle []Image_issue_comment
+	cmd = fmt.Sprintf("%s order by create_date DESC limit  %d,%d", cmd, (page-1)*num, num)
+	_, err = dbmap.Select(&res_modle, cmd)
+	checkErr(err, "select condition failed")
+	res.List = res_modle
+	return res
+}
+func DeleteDataImageIssueComment(comment_id int64) error {
+	cmd := "update image_issue_comment set status=2 "
+	cmd = fmt.Sprintf("%s where id=%d", cmd, comment_id)
+	_, err := dbmap.Exec(cmd)
+	if checkErr(err, "Update failed") == true {
+		return err
+	}
+	return nil
+}
+func UpdateDataImageIssueComment(comment *Image_issue_comment) error {
+	count, err := dbmap.Update(comment)
+	if checkErr(err, "Update failed") == true {
+		return err
+	}
+	log.Println("Rows updated:", count)
+	return nil
+}
+func AddOneImageIssueComment(issue *Image_issue_comment) (int64, error) {
+	issue.Create_date = time.Now().String()
+	issue.Status = 1
+	err := dbmap.Insert(issue)
+	if checkErr(err, "Insert failed") == true {
+		return 0, err
+	}
+	return issue.Id, nil
+}
+func GetImageIssueTotalNum(imageid int64, key string) int64 {
+	count_cmd := fmt.Sprintf("select count(*) from image_issue where status=1 and image_id=%d", imageid)
+	if key != "" {
+		count_cmd += " and title like '%" + key + "%' or content like '%" + key + "%'"
+	}
+	total, err := dbmap.SelectInt(count_cmd)
+	checkErr(err, "select condition failed")
+	return total
+}
+func FindImageIssues(key string, page int, num int, imageid int64) Image_issue_json {
+	var res Image_issue_json
+	var err error
+	res.Num = num
+	res.Page = page
+	var total int64
+	cmd := "select * from image_issue where status=1 "
+	if key == "" {
+		if imageid == -1 {
+			return res
+		} else {
+			cmd = fmt.Sprintf("%s and image_id=%d", cmd, imageid)
+			total = GetImageIssueTotalNum(imageid, "")
+		}
+	} else {
+		cmd += "and title like '%" + key + "%' or content like '%" + key + "%'"
+		total = GetImageIssueTotalNum(imageid, key)
+		if imageid != -1 {
+			cmd = fmt.Sprintf("%s and image_id=%d", cmd, imageid)
+		} else {
+			return res
+		}
+	}
+	res.Total = total
+	var res_modle []Image_issue
+	cmd = fmt.Sprintf("%s order by create_date DESC limit  %d,%d", cmd, (page-1)*num, num)
+	_, err = dbmap.Select(&res_modle, cmd)
+	checkErr(err, "select condition failed")
+	res.List = res_modle
+	return res
+}
+func GetImageIssueById(issue_id int64) Image_issue {
+	var res Image_issue
+	cmd := fmt.Sprintf("select * from image_issue where id =%d", issue_id)
+	err := dbmap.SelectOne(&res, cmd)
+	checkErr(err, cmd+" failed")
+	return res
+}
+func DeleteImageIssueById(issue_id int64) error {
+	cmd := "update image_issue set status=2 "
+	cmd = fmt.Sprintf("%s where id=%d", cmd, issue_id)
+	_, err := dbmap.Exec(cmd)
+	if checkErr(err, "Update failed") == true {
+		return err
+	}
+	return nil
+}
+func UpdateImageIssueById(issue *Image_issue) error {
+	count, err := dbmap.Update(issue)
+	if checkErr(err, "Update failed") == true {
+		return err
+	}
+	log.Println("Rows updated:", count)
+	return nil
+}
+func AddOneImageIssue(issue *Image_issue) (int64, error) {
+	issue.Create_date = time.Now().String()
+	issue.Status = 1
+	err := dbmap.Insert(issue)
+	if checkErr(err, "Insert failed") == true {
+		return 0, err
+	}
+	return issue.Id, nil
+}
+
 //return a new CRImage struct by the input data
 func newImage(uid int64, imgname string, tag int, des string) CRImage {
 	return CRImage{
@@ -76,6 +252,10 @@ func newImage(uid int64, imgname string, tag int, des string) CRImage {
 		Date:      time.Now().Format("2006-01-02"),
 	}
 }
+
+
+
+
 
 //list all the images
 func QueryImage() []CRImage {
@@ -333,6 +513,8 @@ func init_imangeDb(db *gorp.DbMap) {
 	db.AddTableWithName(CRComments{}, "comments").SetKeys(true, "Id")
 	db.AddTableWithName(CRStar{}, "cr_star").SetKeys(true, "StarId")
 	db.AddTableWithName(CRFork{}, "cr_fork").SetKeys(true, "ForkId")
+	db.AddTableWithName(Image_issue{}, "image_issue").SetKeys(true, "Id")
+	db.AddTableWithName(Image_issue_comment{}, "image_issue_comment").SetKeys(true, "Id")
 
 }
 
