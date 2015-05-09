@@ -46,14 +46,14 @@ func addMessage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
-func readMessageAPI(w http.ResponseWriter, r *http.Request) {
-	var m Message
-	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
-		logger.Warnf("error decoding params: %s", err)
+func readMessageAPI(w http.ResponseWriter, r *http.Request, parms martini.Params) {
+	id, err := strconv.ParseInt(parms["id"], 10, 64)
+	if err != nil {
+		logger.Warnf("error converting id: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if err := m.readMessage(); err != nil {
+	if err := readMessage(id); err != nil {
 		logger.Warnf("error updating message status: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -41,15 +41,16 @@ func NewMessage(replyTo int64, author int64, content string, level int8) (Messag
 	return m, err
 }
 
-func (m Message) readMessage() error {
-	m.Status = 2
-	_, err := dbmap.Update(m)
+func readMessage(id int64) error {
+	//	m.Status = 2
+	_, err := dbmap.Exec("UPDATE message SET status = 2 WHERE id = ?", id)
+	//	_, err := dbmap.Update(m)
 	return err
 }
 
 func queryMessage(replyTo int64) ([]Message, error) {
 	var m []Message
-	_, err := dbmap.Select(&m, "select * from message where replyto = ? and status = 1", replyTo)
+	_, err := dbmap.Select(&m, "select * from message where replyto = ? and status = 1 order by id DESC", replyTo)
 	return m, err
 }
 

@@ -68,7 +68,7 @@ func AddImageIssue(r *http.Request, enc Encoder, parms martini.Params) (int, str
 			// Invalid id, or does not exist
 			return
 		}
-		_, err := NewMessage(image.UserId, al.Author, fmt.Sprintf("有人评论了您的讨论，<a href='/dashboard.html#/image/%d/issue/%d' ng-click='read($index)'>click to read</a>", imageid, id), 1)
+		_, err := NewMessage(image.UserId, al.Author, fmt.Sprintf("有人评论了您的讨论，<a href='/dashboard.html#/image/%d/issue/%d'>click to read</a>", imageid, id), 1)
 		if err != nil {
 			log.Println(err)
 		}
@@ -166,7 +166,7 @@ func AddImageIssueComment(r *http.Request, enc Encoder, parms martini.Params) (i
 	go func() {
 		issue := GetImageIssueById(issueid)
 		_, err := NewMessage(al.Reply_to, al.Author,
-			fmt.Sprintf("someone attend <a href='/dashboard.html#/image/%d/issue/%d' ng-click='read($index)'>click to read</a>", issue.Image_id, issue.Id), 1)
+			fmt.Sprintf("someone attend <a href='/dashboard.html#/image/%d/issue/%d'>click to read</a>", issue.Image_id, issue.Id), 1)
 		if err != nil {
 			log.Println(err)
 		}
