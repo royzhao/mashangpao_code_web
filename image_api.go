@@ -313,9 +313,10 @@ func getImageName(w http.ResponseWriter, r *http.Request, parms martini.Params) 
 	id, _ := strconv.ParseInt(parms["id"], 10, 64)
 	var img CRImage
 	image := img.Querylog(id)
-	name := image.ImageName + ":" + strconv.Itoa(image.Tag)
-	fullName := imageFullName{fullname: name}
-	if err := json.NewEncoder(w).Encode(fullName); err != nil {
+	// name := image.ImageName + ":" + strconv.Itoa(image.Tag)
+	// log.Println(name)
+	// fullName := imageFullName{fullname: name}
+	if err := json.NewEncoder(w).Encode(image); err != nil {
 		logger.Error(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

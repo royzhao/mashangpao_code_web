@@ -147,7 +147,7 @@ func init() {
 	r.Get(`/api/coderun/:runid`, GetRunResult)
 
 	//image api
-	r.Get("/dockerapi/image/:id/name", getImageName)
+	r.Get("/dockerapi/images/:id/name", getImageName)
 	r.Get("/dockerapi/images", listImages)
 	r.Post("/dockerapi/image/:name/search", searchImage)
 	r.Get("/dockerapi/images/:id/list", listMyImages)
