@@ -5,27 +5,42 @@ import (
 	"github.com/codegangsta/martini"
 	"github.com/dylanzjy/coderun-request-client"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/hoisie/redis"
+	//	"github.com/hoisie/redis"
 	"gopkg.in/gorp.v1"
 	"log"
 	"net/http"
 	// "net/url"
 	"os"
 	"regexp"
-	"runtime"
+	//	"runtime"
 	// "strconv"
 	"strings"
 	"time"
 	//	"github.com/codegangsta/martini-contrib/auth"
+
+	"github.com/garyburd/redigo/redis"
+	"github.com/youtube/vitess/go/pools"
+	"golang.org/x/net/context"
 )
+
+type ResourceConn struct {
+	redis.Conn
+}
+
+func (r ResourceConn) Close() {
+	r.Conn.Close()
+}
 
 var (
 	addr  = flag.String("p", ":9000", "Address and port to serve dockerui")
 	dbmap *gorp.DbMap
 
 	// 只有一个martini实例
-	m            *martini.Martini
-	redis_client redis.Client
+	m *martini.Martini
+	//	redis_client redis.Client
+	redis_pool     *pools.ResourcePool
+	redis_resource pools.Resource
+	redis_client   ResourceConn
 
 	//docker proxy
 
@@ -33,7 +48,7 @@ var (
 	conf Configuration
 
 	//hot image list timer
-	timer = time.NewTicker(12 * time.Hour)
+	timer = time.NewTicker(10 * time.Second)
 )
 
 func init() {
@@ -53,7 +68,19 @@ func init() {
 	// if redis_addr == "" {
 	// 	redis_addr = "redis.peilong.me:6379"
 	// }
-	redis_client.Addr = redis_addr
+	//	redis_client.Addr = redis_addr
+
+	redis_pool = pools.NewResourcePool(func() (pools.Resource, error) {
+		c, err := redis.Dial("tcp", redis_addr)
+		return ResourceConn{c}, err
+	}, 1, 2, time.Minute)
+	ctx := context.TODO()
+	redis_resource, err = redis_pool.Get(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	redis_client = redis_resource.(ResourceConn)
+
 	// dbmap = nil
 	// //init database
 	dbmap = initDb(conf.DB_addr)
@@ -147,7 +174,7 @@ func init() {
 	r.Get(`/api/coderun/:runid`, GetRunResult)
 
 	//image api
-	r.Get("/dockerapi/image/:id/name", getImageName)
+	r.Get("/dockerapi/images/:id/name", getImageName)
 	r.Get("/dockerapi/images", listImages)
 	r.Post("/dockerapi/image/:name/search", searchImage)
 	r.Get("/dockerapi/images/:id/list", listMyImages)
@@ -255,6 +282,8 @@ func main() {
 	//
 	flag.Parse()
 	defer dbmap.Db.Close()
+	defer redis_pool.Close()
+	defer redis_pool.Put(redis_resource)
 
 	//	timer := time.NewTicker(24 * time.Hour)
 	//	timer := time.NewTicker(10 * time.Second)
@@ -272,7 +301,7 @@ func main() {
 		if err := http.ListenAndServe(*addr, m); err != nil {
 			log.Fatal(err)
 		}
-		runtime.Gosched()
+		//		runtime.Gosched()
 	}()
 	//	//	timer := time.NewTicker(24 * time.Hour)
 	//	timer := time.NewTicker(10 * time.Second)

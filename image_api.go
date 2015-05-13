@@ -259,17 +259,20 @@ func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	if key == "" {
 		result.Num = num
 		result.Page = page
-		val, err := redis_client.Get("hotimage")
+		val, err := redis_client.Do("GET", "hotimage")
 		if err != nil {
 			logger.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		if err = json.Unmarshal(val, &list); err != nil {
+		// convert interface to []byte
+		tmp, _ := val.([]byte)
+		if err = json.Unmarshal(tmp, &list); err != nil {
 			logger.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		if end > 50 {
 			result.List = list.List[start:50]
 		} else if end > len(list.List) {
@@ -313,9 +316,10 @@ func getImageName(w http.ResponseWriter, r *http.Request, parms martini.Params) 
 	id, _ := strconv.ParseInt(parms["id"], 10, 64)
 	var img CRImage
 	image := img.Querylog(id)
-	name := image.ImageName + ":" + strconv.Itoa(image.Tag)
-	fullName := imageFullName{fullname: name}
-	if err := json.NewEncoder(w).Encode(fullName); err != nil {
+	// name := image.ImageName + ":" + strconv.Itoa(image.Tag)
+	// log.Println(name)
+	// fullName := imageFullName{fullname: name}
+	if err := json.NewEncoder(w).Encode(image); err != nil {
 		logger.Error(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
