@@ -33,7 +33,9 @@ func HotTimerList() {
 	var key = "hotimage"
 	//	buf, _ := json.Marshal(images)
 	buf, _ := json.Marshal(HotImages{List: images})
-	redis_client.Do("SET", key, buf)
+	conn := pool.Get()
+	defer conn.Close()
+	conn.Do("SET", key, buf)
 }
 
 func Qsort(images []CRImage, hot []int, start int, end int) {

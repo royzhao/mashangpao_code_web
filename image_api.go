@@ -259,7 +259,9 @@ func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	if key == "" {
 		result.Num = num
 		result.Page = page
-		val, err := redis_client.Do("GET", "hotimage")
+		conn := pool.Get()
+		defer conn.Close()
+		val, err := conn.Do("GET", "hotimage")
 		if err != nil {
 			logger.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

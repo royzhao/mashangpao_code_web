@@ -19,8 +19,8 @@ import (
 	//	"github.com/codegangsta/martini-contrib/auth"
 
 	"github.com/garyburd/redigo/redis"
-	"github.com/youtube/vitess/go/pools"
-	"golang.org/x/net/context"
+	//	"github.com/youtube/vitess/go/pools"
+	//	"golang.org/x/net/context"
 )
 
 type ResourceConn struct {
@@ -38,9 +38,12 @@ var (
 	// 只有一个martini实例
 	m *martini.Martini
 	//	redis_client redis.Client
-	redis_pool     *pools.ResourcePool
-	redis_resource pools.Resource
-	redis_client   ResourceConn
+	//	redis_pool     *pools.ResourcePool
+	//	redis_resource pools.Resource
+	//	redis_client   ResourceConn
+	pool          *redis.Pool
+	redisServer   string
+	redisPassword string
 
 	//docker proxy
 
@@ -48,7 +51,7 @@ var (
 	conf Configuration
 
 	//hot image list timer
-	timer = time.NewTicker(10 * time.Second)
+	timer = time.NewTicker(12 * time.Hour)
 )
 
 func init() {
@@ -63,6 +66,8 @@ func init() {
 	redis_addr := conf.Redis_addr
 	dc = nil
 	log.Println(dc)
+	redisServer = redis_addr
+	redisPassword = ""
 	// redis_addr := os.Getenv("REDIS_ADDR")
 	// log.Println("redis addr is:" + redis_addr)
 	// if redis_addr == "" {
@@ -70,16 +75,16 @@ func init() {
 	// }
 	//	redis_client.Addr = redis_addr
 
-	redis_pool = pools.NewResourcePool(func() (pools.Resource, error) {
-		c, err := redis.Dial("tcp", redis_addr)
-		return ResourceConn{c}, err
-	}, 1, 2, time.Minute)
-	ctx := context.TODO()
-	redis_resource, err = redis_pool.Get(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	redis_client = redis_resource.(ResourceConn)
+	//	redis_pool = pools.NewResourcePool(func() (pools.Resource, error) {
+	//		c, err := redis.Dial("tcp", redis_addr)
+	//		return ResourceConn{c}, err
+	//	}, 1, 5, time.Minute)
+	//	ctx := context.TODO()
+	//	redis_resource, err = redis_pool.Get(ctx)
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+	//	redis_client = redis_resource.(ResourceConn)
 
 	// dbmap = nil
 	// //init database
@@ -282,8 +287,9 @@ func main() {
 	//
 	flag.Parse()
 	defer dbmap.Db.Close()
-	defer redis_pool.Close()
-	defer redis_pool.Put(redis_resource)
+	pool = newPool(redisServer, redisPassword)
+	//	defer redis_pool.Close()
+	//	defer redis_pool.Put(redis_resource)
 
 	//	timer := time.NewTicker(24 * time.Hour)
 	//	timer := time.NewTicker(10 * time.Second)
