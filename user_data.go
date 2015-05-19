@@ -17,7 +17,7 @@ type UserInfo struct {
 	Discrip string `db:"discription"`
 }
 
-func (u UserInfo) updateInfo() {
+func (u UserInfo) updateInfo() error {
 	_, err := dbmap.Update(u)
 	if err != nil {
 		logger.Println("update userinfo error: ", err)
@@ -35,7 +35,7 @@ func (u UserInfo) insertInfo() error {
 	return nil
 }
 
-func (u *UserInfo) isExist(uid int) (bool, error) {
+func (u *UserInfo) isExist(uid int64) (bool, error) {
 	cmd := fmt.Sprintf("select count(*) from user_info where user_id=%d", uid)
 	count, err := dbmap.SelectInt(cmd)
 	if err != nil {

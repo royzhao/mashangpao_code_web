@@ -188,10 +188,12 @@ func init() {
 	r.Get("/dockerapi/images/:id/log", imageLogs)
 	r.Get("/dockerapi/images/:name/verify", imageVerify)
 	//r.Delete("/dockerapi/images/{id}/delete", deleteImage)
-	r.Post("/dockerapi/image/create", createImage)
-	r.Post("/dockerapi/image/commit", commitImage)
-	r.Post("/dockerapi/image/push", pushImage)
-	r.Post("/dockerapi/image/edit", editImage)
+	//add userid
+	r.Post("/dockerapi/image/create/:userid", createImage)
+	r.Post("/dockerapi/image/commit/:userid", commitImage)
+	r.Post("/dockerapi/image/push/:userid", pushImage)
+	r.Post("/dockerapi/image/edit/:userid", editImage)
+	//
 	r.Post("/dockerapi/image/star", starImage)
 	r.Post("/dockerapi/image/fork", forkImage)
 	r.Get("/dockerapi/star/:uid/:id", queryStarid)
