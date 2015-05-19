@@ -259,17 +259,22 @@ func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 	if key == "" {
 		result.Num = num
 		result.Page = page
-		val, err := redis_client.Get("hotimage")
+		conn := pool.Get()
+		defer conn.Close()
+		val, err := conn.Do("GET", "hotimage")
 		if err != nil {
 			logger.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		if err = json.Unmarshal(val, &list); err != nil {
+		// convert interface to []byte
+		tmp, _ := val.([]byte)
+		if err = json.Unmarshal(tmp, &list); err != nil {
 			logger.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		if end > 50 {
 			result.List = list.List[start:50]
 		} else if end > len(list.List) {

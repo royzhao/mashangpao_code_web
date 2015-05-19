@@ -12,9 +12,13 @@ func GetMd5String(s string) string {
 }
 
 func GetValue(key string) (int, string) {
-	code_run_res_byte, _ := redis_client.Get(key)
+	//	code_run_res_byte, _ := redis_client.Get(key)
+	conn := pool.Get()
+	defer conn.Close()
+	code_run_res_byte, _ := conn.Do("GET", key)
 	status := 1
-	code_run_res := string(code_run_res_byte)
+	//	code_run_res := string(code_run_res_byte)
+	code_run_res := code_run_res_byte.(string)
 	if code_run_res == "" {
 		code_run_res = "commit successful, now running"
 		//pull request
