@@ -11,6 +11,8 @@ type Configuration struct {
 	Dockerhub       string
 	Redis_addr      string
 	DB_addr         string
+	App_id          string
+	App_key         string
 }
 
 func ReadConfigure(name string) (Configuration, error) {

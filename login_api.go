@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	//	"fmt"
+	"fmt"
 	"github.com/dylanzjy/coderun-request-client"
 	"net/http"
 	"net/url"
@@ -10,7 +11,7 @@ import (
 )
 
 var (
-	ssoEndpoint  = "http://121.41.82.206:11111"
+	ssoEndpoint  = "http://sso.learn4me.com"
 	ssoClient, _ = client.NewSSOClient(ssoEndpoint)
 )
 
@@ -20,6 +21,20 @@ type appInfo struct {
 	Token   string `json:"token" yaml:"token"`
 }
 
+func GetUserTotalInfoByID(id int) client {
+	user_key = fmt.Sprintf("user_id=%d", id)
+	// if user_info == nil {
+	// 	log.Println(token)
+	// 	formInfo := url.Values{"app_id": {conf.App_id}, "app_key": {conf.App_key}, "token": {token}}
+	// 	userData, err := ssoClient.IsLogin(formInfo)
+	// 	if err != nil {
+	// 		// log.Println(err)
+	// 		// res.WriteHeader(http.StatusUnauthorized)
+	// 		// return
+	// 	}
+	// 	log.Println(userData)
+	// }
+}
 func isLogin(w http.ResponseWriter, r *http.Request) {
 	var info appInfo
 	if err := json.NewDecoder(r.Body).Decode(&info); err != nil {

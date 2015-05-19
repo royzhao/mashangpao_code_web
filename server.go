@@ -9,7 +9,7 @@ import (
 	"gopkg.in/gorp.v1"
 	"log"
 	"net/http"
-	// "net/url"
+	"net/url"
 	"os"
 	"regexp"
 	"runtime"
@@ -71,28 +71,28 @@ func init() {
 	m.Use(martini.Static("public"))
 	//m.Use(auth.Basic(AuthToken, ""))
 
-	// m.Use(func(res http.ResponseWriter, req *http.Request) {
-	// 	if req.Method != "GET" {
-	// 		token := req.Header.Get("x-session-token")
-	// 		if token == "" {
-	// 			res.WriteHeader(http.StatusUnauthorized)
-	// 			return
-	// 		}
-	// 		log.Println(token)
-	// 		formInfo := url.Values{"app_id": {strconv.Itoa(1)}, "app_key": {"Ei1F4LeTIUmJeFdO1MfbdkGQpZMeQ0CUX3aQD4kMOMVsRz7IAbjeBpurD6LTvNoI"}, "token": {token}}
-	// 		userData, err := ssoClient.IsLogin(formInfo)
-	// 		if err != nil {
-	// 			log.Println(err)
-	// 			res.WriteHeader(http.StatusUnauthorized)
-	// 			return
-	// 		}
-	// 		log.Println(userData)
-	// 		if userData.Is_login == "false" {
-	// 			res.WriteHeader(http.StatusUnauthorized)
-	// 			return
-	// 		}
-	// 	}
-	// })
+	m.Use(func(res http.ResponseWriter, req *http.Request) {
+		if req.Method != "GET" {
+			token := req.Header.Get("x-session-token")
+			if token == "" {
+				res.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			log.Println(token)
+			formInfo := url.Values{"app_id": {conf.App_id}, "app_key": {conf.App_key}, "token": {token}}
+			userData, err := ssoClient.IsLogin(formInfo)
+			if err != nil {
+				log.Println(err)
+				res.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			log.Println(userData)
+			if userData.Is_login == "false" {
+				res.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+		}
+	})
 
 	m.Use(MapEncoder)
 
@@ -101,6 +101,8 @@ func init() {
 	r.Get(`/api/code`, GetCodes)
 	//得到某一个用户的所有代码
 	r.Get(`/api/user/code/:userid`, GetCodesByUser)
+	//get user info by id
+	r.Get(`/api/user/:userid/info`, GetUserInfoByID)
 	//一个用户增加一个代码
 	r.Post(`/api/user/code/:userid`, AddCode)
 	//查询一个指定的代码
