@@ -305,14 +305,10 @@ func main() {
 
 	go func() {
 		log.Println("listening on 9000")
-		//		redis_client.Del("hotimage")
 		if err := http.ListenAndServe(*addr, m); err != nil {
 			log.Fatal(err)
 		}
-		//		runtime.Gosched()
 	}()
-	//	//	timer := time.NewTicker(24 * time.Hour)
-	//	timer := time.NewTicker(10 * time.Second)
 	for {
 		select {
 		case <-timer.C:

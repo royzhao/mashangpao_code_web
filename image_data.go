@@ -12,36 +12,36 @@ import (
 )
 
 type Image_issue struct {
-	Id          int64    `json:"id"`
+	Id          int64  `json:"id"`
 	Create_date string `json:"create_date"`
-	Image_id     int64    `json:"image_id"`
-	Author      int64   `json:"author"`
+	Image_id    int64  `json:"image_id"`
+	Author      int64  `json:"author"`
 	Title       string `json:"title"`
 	Content     string `json:"content"`
 	Status      int    `json:"status"`
 }
 
 type Image_issue_comment struct {
-	Id          int64    `json:"id"`
+	Id          int64  `json:"id"`
 	Create_date string `json:"create_date"`
-	Issue_id    int64    `json:"issue_id"`
-	Reply_to    int64    `json:"reply_to"`
-	Author      int64    `json"author"`
+	Issue_id    int64  `json:"issue_id"`
+	Reply_to    int64  `json:"reply_to"`
+	Author      int64  `json"author"`
 	Content     string `json:"content"`
 	Status      int    `json:"status"`
 }
 type Image_issue_comment_json struct {
 	Issue Image_issue           `json:"issue"`
 	List  []Image_issue_comment `json:"list"`
-	Total int64                `json:"total"`
-	Page  int                  `json:"page"`
-	Num   int                  `json:"num"`
+	Total int64                 `json:"total"`
+	Page  int                   `json:"page"`
+	Num   int                   `json:"num"`
 }
 type Image_issue_json struct {
 	List  []Image_issue `json:"list"`
-	Total int64        `json:"total"`
-	Page  int          `json:"page"`
-	Num   int          `json:"num"`
+	Total int64         `json:"total"`
+	Page  int           `json:"page"`
+	Num   int           `json:"num"`
 }
 
 type CRImage struct {
@@ -252,10 +252,6 @@ func newImage(uid int64, imgname string, tag int, des string) CRImage {
 		Date:      time.Now().Format("2006-01-02"),
 	}
 }
-
-
-
-
 
 //list all the images
 func QueryImage() []CRImage {

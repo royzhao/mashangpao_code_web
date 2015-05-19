@@ -28,6 +28,7 @@ func initDb(db_addr string) *gorp.DbMap {
 	init_codestep(dbmap)
 	init_imangeDb(dbmap)
 	init_messageDb(dbmap)
+	init_userDb(dbmap)
 	// create the table. in a production system you'd generally
 	// use a migration tool, or create the tables via scripts
 	err = dbmap.CreateTablesIfNotExists()
