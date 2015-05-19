@@ -134,7 +134,7 @@ func init() {
 	//得到某一个用户的所有代码
 	r.Get(`/api/user/code/:userid`, GetCodesByUser)
 	//get user info by id
-	r.Get(`/api/user/:userid/info`, GetUserInfoByID)
+	// r.Get(`/api/user/:userid/info`, GetUserInfoByID)
 	//一个用户增加一个代码
 	r.Post(`/api/user/code/:userid`, AddCode)
 	//查询一个指定的代码
