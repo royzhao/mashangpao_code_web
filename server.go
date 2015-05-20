@@ -215,6 +215,9 @@ func init() {
 	r.Put(`/api/image/issue/:userid/:issueid/comment/:commentid`, UpdateImageIssueComment)
 	r.Delete(`/api/image/issue/:userid/:issueid/comment/:commentid`, DeleteImageIssueComment)
 
+	r.Post(`/api/user/info/update`, updateUserInfo)
+	r.Get(`/api/user/info/get/:uid`, getUserInfo)
+
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))
 	m.MapTo(code_step_db, (*codeStepDB_inter)(nil))
