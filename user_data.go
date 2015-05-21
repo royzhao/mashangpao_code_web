@@ -18,7 +18,7 @@ type UserInfo struct {
 }
 
 func (u UserInfo) updateInfo() error {
-	_, err := dbmap.Update(u)
+	_, err := dbmap.Update(&u)
 	if err != nil {
 		logger.Println("update userinfo error: ", err)
 		return err
@@ -27,7 +27,7 @@ func (u UserInfo) updateInfo() error {
 }
 
 func (u UserInfo) insertInfo() error {
-	err := dbmap.Insert(u)
+	err := dbmap.Insert(&u)
 	if err != nil {
 		logger.Println("insert userinfo error: ", err)
 		return err

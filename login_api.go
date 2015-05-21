@@ -43,7 +43,7 @@ func isLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//	fmt.Println(info)
-	formInfo := url.Values{"app_id": {strconv.Itoa(1)}, "app_key": {"Ei1F4LeTIUmJeFdO1MfbdkGQpZMeQ0CUX3aQD4kMOMVsRz7IAbjeBpurD6LTvNoI"}, "token": {info.Token}}
+	formInfo := url.Values{"app_id": {strconv.Itoa(1)}, "app_key": {"qUOZce0EGMeJoG70Nx7V2q0nwbgKr47VWtxjsH73ohNQEnx3OkGJqEdgLzIo8DUd"}, "token": {info.Token}}
 	//	fmt.Println(formInfo)
 	userData, err := ssoClient.IsLogin(formInfo)
 	if err != nil {
