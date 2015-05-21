@@ -42,6 +42,7 @@ func GetImageIssues(r *http.Request, enc Encoder, parms martini.Params) (int, st
 	// Otherwise, return all Codes
 	return http.StatusOK, Must(enc.Encode(FindImageIssues(key, _page, _num, id)))
 }
+
 func AddImageIssue(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
 	imageid, err := strconv.ParseInt(parms["imageid"], 10, 64)
 	if err != nil {
@@ -75,6 +76,7 @@ func AddImageIssue(r *http.Request, enc Encoder, parms martini.Params) (int, str
 	}()
 	return http.StatusCreated, Must(enc.Encode(al))
 }
+
 func DeleteImageIssue(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
 	issue, err := strconv.ParseInt(parms["issueid"], 10, 64)
 	if err != nil {
@@ -89,6 +91,7 @@ func DeleteImageIssue(r *http.Request, enc Encoder, parms martini.Params) (int, 
 	}
 	return http.StatusOK, fmt.Sprintf("delete issue=%d is ok", issue)
 }
+
 func UpdateImageIssue(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
 	imageid, err := strconv.ParseInt(parms["imageid"], 10, 64)
 	if err != nil {
@@ -116,6 +119,7 @@ func UpdateImageIssue(r *http.Request, enc Encoder, parms martini.Params) (int, 
 	}
 	return http.StatusOK, Must(enc.Encode(al))
 }
+
 func GetImageIssueComments(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
 	id, err := strconv.ParseInt(parms["issueid"], 10, 64)
 	if err != nil {
@@ -145,6 +149,7 @@ func GetImageIssueComments(r *http.Request, enc Encoder, parms martini.Params) (
 	// Otherwise, return all Codes
 	return http.StatusOK, Must(enc.Encode(FindImageIssueComment(key, _page, _num, id)))
 }
+
 func AddImageIssueComment(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
 	issueid, err := strconv.ParseInt(parms["issueid"], 10, 64)
 	if err != nil {
@@ -173,6 +178,7 @@ func AddImageIssueComment(r *http.Request, enc Encoder, parms martini.Params) (i
 	}()
 	return http.StatusCreated, Must(enc.Encode(al))
 }
+
 func DeleteImageIssueComment(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
 	commentid, err := strconv.ParseInt(parms["commentid"], 10, 64)
 	if err != nil {
@@ -187,6 +193,7 @@ func DeleteImageIssueComment(r *http.Request, enc Encoder, parms martini.Params)
 	}
 	return http.StatusOK, fmt.Sprintf("delete commentid=%d is ok", commentid)
 }
+
 func UpdateImageIssueComment(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
 	issueid, err := strconv.ParseInt(parms["issueid"], 10, 64)
 	if err != nil {

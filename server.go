@@ -188,10 +188,12 @@ func init() {
 	r.Get("/dockerapi/images/:id/log", imageLogs)
 	r.Get("/dockerapi/images/:name/verify", imageVerify)
 	//r.Delete("/dockerapi/images/{id}/delete", deleteImage)
-	r.Post("/dockerapi/image/create", createImage)
-	r.Post("/dockerapi/image/commit", commitImage)
-	r.Post("/dockerapi/image/push", pushImage)
-	r.Post("/dockerapi/image/edit", editImage)
+	//add userid
+	r.Post("/dockerapi/image/create/:userid", createImage)
+	r.Post("/dockerapi/image/commit/:userid", commitImage)
+	r.Post("/dockerapi/image/push/:userid", pushImage)
+	r.Post("/dockerapi/image/edit/:userid", editImage)
+	//
 	r.Post("/dockerapi/image/star", starImage)
 	r.Post("/dockerapi/image/fork", forkImage)
 	r.Get("/dockerapi/star/:uid/:id", queryStarid)
@@ -212,6 +214,9 @@ func init() {
 	r.Post(`/api/image/issue/:userid/:issueid/comment`, AddImageIssueComment)
 	r.Put(`/api/image/issue/:userid/:issueid/comment/:commentid`, UpdateImageIssueComment)
 	r.Delete(`/api/image/issue/:userid/:issueid/comment/:commentid`, DeleteImageIssueComment)
+
+	r.Post(`/api/user/info/update`, updateUserInfo)
+	r.Get(`/api/user/info/get/:uid`, getUserInfo)
 
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))
@@ -305,14 +310,10 @@ func main() {
 
 	go func() {
 		log.Println("listening on 9000")
-		//		redis_client.Del("hotimage")
 		if err := http.ListenAndServe(*addr, m); err != nil {
 			log.Fatal(err)
 		}
-		//		runtime.Gosched()
 	}()
-	//	//	timer := time.NewTicker(24 * time.Hour)
-	//	timer := time.NewTicker(10 * time.Second)
 	for {
 		select {
 		case <-timer.C:

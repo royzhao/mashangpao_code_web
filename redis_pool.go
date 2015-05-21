@@ -8,7 +8,7 @@ import (
 func newPool(server, password string) *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:     3,
-		IdleTimeout: 240 * time.Second,
+		IdleTimeout: 2400 * time.Second,
 		Dial: func() (redis.Conn, error) {
 			c, err := redis.Dial("tcp", server)
 			if err != nil {
