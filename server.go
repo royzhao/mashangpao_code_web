@@ -113,7 +113,7 @@ func init() {
 				res.WriteHeader(http.StatusUnauthorized)
 				return
 			}
-			log.Println(token)
+			log.Println(conf.App_key)
 			formInfo := url.Values{"app_id": {conf.App_id}, "app_key": {conf.App_key}, "token": {token}}
 			userData, err := ssoClient.IsLogin(formInfo)
 			if err != nil {
