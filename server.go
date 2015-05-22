@@ -55,7 +55,8 @@ var (
 )
 
 func init() {
-	conf, err := ReadConfigure("conf.json")
+	var err error
+	conf, err = ReadConfigure("conf.json")
 	if err != nil {
 		panic(err)
 	}
@@ -91,6 +92,8 @@ func init() {
 	dbmap = initDb(conf.DB_addr)
 	dbmap.TraceOn("[gorp]", log.New(os.Stdout, "myapp:", log.Lmicroseconds))
 	log.Println("init db is successful!")
+	pool = newPool(redisServer, redisPassword)
+
 	// initrundb()
 	//init code module
 	//init_code()
@@ -294,7 +297,6 @@ func main() {
 	//
 	flag.Parse()
 	defer dbmap.Db.Close()
-	pool = newPool(redisServer, redisPassword)
 	//	defer redis_pool.Close()
 	//	defer redis_pool.Put(redis_resource)
 

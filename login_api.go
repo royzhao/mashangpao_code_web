@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	//	"fmt"
-	// "fmt"
+	"fmt"
+	"github.com/codegangsta/martini"
 	"github.com/dylanzjy/coderun-request-client"
 	"net/http"
 	"net/url"
@@ -21,20 +22,6 @@ type appInfo struct {
 	Token   string `json:"token" yaml:"token"`
 }
 
-func GetUserTotalInfoByID(id int) client {
-	user_key = fmt.Sprintf("user_id=%d", id)
-	// if user_info == nil {
-	// 	log.Println(token)
-	// 	formInfo := url.Values{"app_id": {conf.App_id}, "app_key": {conf.App_key}, "token": {token}}
-	// 	userData, err := ssoClient.IsLogin(formInfo)
-	// 	if err != nil {
-	// 		// log.Println(err)
-	// 		// res.WriteHeader(http.StatusUnauthorized)
-	// 		// return
-	// 	}
-	// 	log.Println(userData)
-	// }
-}
 func isLogin(w http.ResponseWriter, r *http.Request) {
 	var info appInfo
 	if err := json.NewDecoder(r.Body).Decode(&info); err != nil {
@@ -43,7 +30,7 @@ func isLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//	fmt.Println(info)
-	formInfo := url.Values{"app_id": {strconv.Itoa(1)}, "app_key": {"Ei1F4LeTIUmJeFdO1MfbdkGQpZMeQ0CUX3aQD4kMOMVsRz7IAbjeBpurD6LTvNoI"}, "token": {info.Token}}
+	formInfo := url.Values{"app_id": {conf.App_id}, "app_key": {conf.App_key}, "token": {info.Token}}
 	//	fmt.Println(formInfo)
 	userData, err := ssoClient.IsLogin(formInfo)
 	if err != nil {
@@ -60,6 +47,23 @@ func isLogin(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func GetUserInfoByID(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
+	id, err := strconv.ParseInt(parms["userid"], 10, 64)
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the user with id %s does not exist", parms["userid"]))))
+	}
+	user, err := GetUserTotalInfoByID(id)
+	fmt.Println(err)
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the user with id %s does not exist", parms["userid"]))))
+	}
+	return http.StatusOK, Must(enc.Encode(user))
 }
 
 //func logout(w http.ResponseWriter, r *http.Request) {
