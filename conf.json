@@ -1,9 +1,9 @@
 {
 	"Endpoint":"http://imagehub.learn4me.com",
-	"Dockerhub":"docker2.peilong.me:5000",
-	"BrowserEndpoint":"http://192.168.1.111:8080",
+	"Dockerhub":"registry.learn4me.com:5000",
+	"BrowserEndpoint":"http://proxy.learn4me.com",
 	"Redis_addr":"redis.peilong.me:6379",
 	"DB_addr":"vpn.peilong.me:3306",
 	"App_id":"1",
-	"App_key":"qUOZce0EGMeJoG70Nx7V2q0nwbgKr47VWtxjsH73ohNQEnx3OkGJqEdgLzIo8DUd"
+	"App_key":"rjLR0wIP04y7Nxybal09Re2Xn3ZeOy1Pdzt0kyXsr0IlGbsN9tVd72jC0wZPuGRJ"
 }

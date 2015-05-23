@@ -18,7 +18,7 @@ var (
 	// dockerhub       = "docker2.peilong.me:5000"
 	endpoint        = "http://imagehub.learn4me.com"
 	browserEndpoint string
-	dockerhub       = "docker2.peilong.me:5000"
+	dockerhub       = "registry.learn4me.com:5000"
 	dockerclient    *docker.Client
 )
 
@@ -30,7 +30,7 @@ func (c CRImage) dockerCommit() error {
 	//func main() {
 	//req, err := http.NewRequest("GET", c.getURL(path), params)
 	logger.Warnln(c.UserId)
-	resp, err := http.Get(browserEndpoint + "/containers/" + strconv.FormatInt(c.UserId, 10))
+	resp, err := http.Get(conf.BrowserEndpoint + "/containers/" + strconv.FormatInt(c.UserId, 10))
 	if err != nil {
 		logger.Warnf("error getting container id: %s", err)
 		return err
@@ -49,7 +49,6 @@ func (c CRImage) dockerCommit() error {
 		logger.Warnf("error decoding container id: %s", err)
 		return err
 	}
-
 	commitOpts := docker.CommitContainerOptions{Container: di.ID, Repository: c.ImageName, Tag: strconv.Itoa(c.Tag)}
 	if _, err := dockerclient.CommitContainer(commitOpts); err != nil {
 		logger.Warnf("error committing container: %s", err)
@@ -71,12 +70,12 @@ func (c CRImage) dockerPush() error {
 	logger.Println(c.ImageName)
 	name := c.ImageName + ":" + strconv.Itoa(c.Tag)
 	logger.Println(name)
-	if err := dockerclient.TagImage(name, docker.TagImageOptions{Repo: dockerhub + "/" + c.ImageName, Tag: strconv.Itoa(c.Tag), Force: true}); err != nil {
+	if err := dockerclient.TagImage(name, docker.TagImageOptions{Repo: conf.Dockerhub + "/" + c.ImageName, Tag: strconv.Itoa(c.Tag), Force: true}); err != nil {
 		logger.Warnf("error tagging container: %s", err)
 		return err
 	}
 	logger.Println(strconv.Itoa(c.Tag))
-	opts := docker.PushImageOptions{Name: dockerhub + "/" + c.ImageName, Tag: strconv.Itoa(c.Tag), Registry: dockerhub + "/"}
+	opts := docker.PushImageOptions{Name: conf.Dockerhub + "/" + c.ImageName, Tag: strconv.Itoa(c.Tag), Registry: conf.Dockerhub + "/"}
 	var auth docker.AuthConfiguration
 	if err := dockerclient.PushImage(opts, auth); err != nil {
 		logger.Warnf("error pushing container: %s", err)
@@ -86,7 +85,7 @@ func (c CRImage) dockerPush() error {
 }
 
 func (c CRImage) dockerFork(oldName string) error {
-	oldName = dockerhub + "/" + oldName
+	oldName = conf.Dockerhub + "/" + oldName
 	bash := []string{"bash"}
 	config := &docker.Config{AttachStdin: true,
 		AttachStdout: true,

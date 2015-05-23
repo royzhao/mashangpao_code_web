@@ -30,11 +30,7 @@ func isLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//	fmt.Println(info)
-<<<<<<< HEAD
 	formInfo := url.Values{"app_id": {conf.App_id}, "app_key": {conf.App_key}, "token": {info.Token}}
-=======
-	formInfo := url.Values{"app_id": {strconv.Itoa(1)}, "app_key": {"qUOZce0EGMeJoG70Nx7V2q0nwbgKr47VWtxjsH73ohNQEnx3OkGJqEdgLzIo8DUd"}, "token": {info.Token}}
->>>>>>> 8816a9daf503083510b72a798bed51c9e913ee57
 	//	fmt.Println(formInfo)
 	userData, err := ssoClient.IsLogin(formInfo)
 	if err != nil {
