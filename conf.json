@@ -1,6 +1,7 @@
 {
 	"Endpoint":"http://imagehub.learn4me.com",
 	"Dockerhub":"registry.learn4me.com:5000",
+	"SSO":"http://sso.learn4me.com",
 	"BrowserEndpoint":"http://proxy.learn4me.com",
 	"Redis_addr":"redis.peilong.me:6379",
 	"DB_addr":"vpn.peilong.me:3306",

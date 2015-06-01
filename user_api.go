@@ -2,13 +2,29 @@ package main
 
 import (
 	"encoding/json"
-	//	"fmt"
+	"fmt"
 	//	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/martini"
 	"net/http"
 	"strconv"
 	//	"time"
 )
+
+func checkPic(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusNoContent)
+}
+func uploadPic(w http.ResponseWriter, enc Encoder, r *http.Request) (int, string) {
+	key, err := upload2qiniuHandler(r)
+	if err != nil {
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, "upload failed")))
+	}
+	fmt.Println(key)
+	// w.Header().Set("content-type", "application/json")
+	return http.StatusOK, Must(enc.Encode(
+		NewError(ErrCodeOK, key)))
+}
 
 func updateUserInfo(w http.ResponseWriter, r *http.Request) {
 	var user UserInfo
@@ -46,13 +62,14 @@ func getUserInfo(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 		return
 	}
 	var u UserInfo
-	_, err = u.isExist(uid)
+	// _, err = u.isExist(uid)
+	data, err := u.getInfoFilter(uid)
 	if err != nil {
 		logger.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if err := json.NewEncoder(w).Encode(u); err != nil {
+	if err := json.NewEncoder(w).Encode(data); err != nil {
 		logger.Error(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

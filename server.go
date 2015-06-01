@@ -55,6 +55,7 @@ var (
 )
 
 func init() {
+	initqiniu()
 	var err error
 	conf, err = ReadConfigure("conf.json")
 	if err != nil {
@@ -62,6 +63,7 @@ func init() {
 	}
 	endpoint = conf.Endpoint
 	dockerclient, _ = docker.NewClient(endpoint)
+	ssoClient, _ = client.NewSSOClient(conf.SSO)
 	browserEndpoint = conf.BrowserEndpoint
 	dockerhub = conf.Dockerhub
 	redis_addr := conf.Redis_addr
@@ -108,24 +110,29 @@ func init() {
 
 	m.Use(func(res http.ResponseWriter, req *http.Request) {
 		if req.Method != "GET" {
-			token := req.Header.Get("x-session-token")
-			if token == "" {
-				res.WriteHeader(http.StatusUnauthorized)
-				return
+			is_auth := strings.Split(req.URL.Path, "coderun")
+			log.Println(is_auth)
+			if len(is_auth) <= 1 {
+				token := req.Header.Get("x-session-token")
+				if token == "" {
+					res.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				log.Println(conf.App_key)
+				formInfo := url.Values{"app_id": {conf.App_id}, "app_key": {conf.App_key}, "token": {token}}
+				userData, err := ssoClient.IsLogin(formInfo)
+				if err != nil {
+					log.Println(err)
+					res.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				log.Println(userData)
+				if userData.Is_login == "false" {
+					res.WriteHeader(http.StatusUnauthorized)
+					return
+				}
 			}
-			log.Println(conf.App_key)
-			formInfo := url.Values{"app_id": {conf.App_id}, "app_key": {conf.App_key}, "token": {token}}
-			userData, err := ssoClient.IsLogin(formInfo)
-			if err != nil {
-				log.Println(err)
-				res.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			log.Println(userData)
-			if userData.Is_login == "false" {
-				res.WriteHeader(http.StatusUnauthorized)
-				return
-			}
+
 		}
 	})
 
@@ -218,8 +225,11 @@ func init() {
 	r.Put(`/api/image/issue/:userid/:issueid/comment/:commentid`, UpdateImageIssueComment)
 	r.Delete(`/api/image/issue/:userid/:issueid/comment/:commentid`, DeleteImageIssueComment)
 
-	r.Post(`/api/user/info/update`, updateUserInfo)
+	r.Post(`/api/user/info/update/:uid`, updateUserInfo)
 	r.Get(`/api/user/info/get/:uid`, getUserInfo)
+
+	r.Get(`/api/user/upload/:userid`, checkPic)
+	r.Post(`/api/user/upload/:userid`, uploadPic)
 
 	// Inject database
 	m.MapTo(code_db, (*codeDB_inter)(nil))

@@ -26,6 +26,16 @@ type Code_issue struct {
 	Status      int    `json:"status"`
 }
 
+type Code_issue_info struct {
+	Id          int           `json:"id"`
+	Create_date string        `json:"create_date"`
+	Code_id     int           `json:"code_id"`
+	Author      *UserSafeData `json:"author"`
+	Title       string        `json:"title"`
+	Content     string        `json:"content"`
+	Status      int           `json:"status"`
+}
+
 type Code_issue_comment struct {
 	Id          int    `json:"id"`
 	Create_date string `json:"create_date"`
@@ -35,12 +45,22 @@ type Code_issue_comment struct {
 	Content     string `json:"content"`
 	Status      int    `json:"status"`
 }
+
+type Code_issue_comment_info struct {
+	Id          int           `json:"id"`
+	Create_date string        `json:"create_date"`
+	Issue_id    int           `json:"issue_id"`
+	Reply_to    int           `json:"reply_to"`
+	Author      *UserSafeData `json"author"`
+	Content     string        `json:"content"`
+	Status      int           `json:"status"`
+}
 type Code_issue_comment_json struct {
-	Issue Code_issue           `json:"issue"`
-	List  []Code_issue_comment `json:"list"`
-	Total int64                `json:"total"`
-	Page  int                  `json:"page"`
-	Num   int                  `json:"num"`
+	Issue Code_issue_info           `json:"issue"`
+	List  []Code_issue_comment_info `json:"list"`
+	Total int64                     `json:"total"`
+	Page  int                       `json:"page"`
+	Num   int                       `json:"num"`
 }
 type Code_issue_json struct {
 	List  []Code_issue `json:"list"`
@@ -104,7 +124,7 @@ type codeDB_inter interface {
 
 	//issue process
 	GetIssueTotalNum(codeid int, key string) int64
-	GetIssueById(issue_id int) Code_issue
+	GetIssueById(issue_id int) Code_issue_info
 	FindIssues(key string, page int, num int, codeid int) Code_issue_json
 	DeleteIssueById(issue_id int) error
 	UpdateIssueById(issue *Code_issue) error
@@ -160,7 +180,7 @@ func (db *codeDB) FindIssueComment(key string, page int, num int, issue_id int) 
 	cmd = fmt.Sprintf("%s order by create_date DESC limit  %d,%d", cmd, (page-1)*num, num)
 	_, err = db.m.Select(&res_modle, cmd)
 	checkErr(err, "select condition failed")
-	res.List = res_modle
+	res.List = convertCode2Codeinfo(res_modle)
 	return res
 }
 func (db *codeDB) DeleteIssueComment(comment_id int) error {
@@ -229,12 +249,12 @@ func (db *codeDB) FindIssues(key string, page int, num int, codeid int) Code_iss
 	res.List = res_modle
 	return res
 }
-func (db *codeDB) GetIssueById(issue_id int) Code_issue {
+func (db *codeDB) GetIssueById(issue_id int) Code_issue_info {
 	var res Code_issue
 	cmd := fmt.Sprintf("select * from code_issue where id =%d", issue_id)
 	err := db.m.SelectOne(&res, cmd)
 	checkErr(err, cmd+" failed")
-	return res
+	return convertCode2CodeOne(res)
 }
 func (db *codeDB) DeleteIssueById(issue_id int) error {
 	cmd := "update code_issue set status=2 "

@@ -19,9 +19,33 @@ type UserInfo struct {
 	Discrip string `db:"discription"`
 }
 
+type UserMeta struct {
+	User_id   string `json:"id"`
+	User_name string `json:"name"`
+	// User_mail       string
+	User_nick string `json:"nick"`
+	User_time string `json:"time"`
+	// User_time_login string
+	// User_ip   string
+	// Str_alert string
+}
+
+type UserSafeData struct {
+	Info UserInfo `json:"info"`
+	Meta UserMeta `json:"meta"`
+}
 type UserTotalData struct {
 	SSOmeta client.UserInfo `json:"sso_meta"`
 	Info    UserInfo        `json:"info"`
+}
+
+func SetUserinfo2Cache(t UserTotalData) error {
+	if t.Info.Id == 0 {
+		return NewError(1, "cache failed")
+	}
+	key := fmt.Sprintf("user_%d", t.Info.UserId)
+	err := SetValue(key, t)
+	return err
 }
 
 //get user info from cache by user id
@@ -88,6 +112,21 @@ func (u *UserInfo) isExist(uid int64) (bool, error) {
 	}
 }
 
+func (u *UserInfo) getInfoFilter(uid int64) (*UserSafeData, error) {
+	data, err := u.getInfo(uid)
+	if err != nil {
+		return nil, err
+	}
+	var ret UserSafeData
+	ret.Info = data.Info
+	ret.Meta = UserMeta{
+		User_id:   data.SSOmeta.User_id,
+		User_name: data.SSOmeta.User_name,
+		User_nick: data.SSOmeta.User_nick,
+		User_time: data.SSOmeta.User_time,
+	}
+	return &ret, nil
+}
 func (u *UserInfo) getInfo(uid int64) (*UserTotalData, error) {
 	//get info from redis
 	user, _ := GetUserinfoByCache(uid)
@@ -105,7 +144,15 @@ func (u *UserInfo) getInfo(uid int64) (*UserTotalData, error) {
 	}()
 	res, _ := u.isExist(uid)
 	if res == false {
-		return nil, NewError(1, "no such user info in web ")
+		//insert one
+		u.UserId = uid
+		u.Avatar = "default.jpg"
+		u.Discrip = "快来介绍一下自己吧~"
+		// return nil, NewError(1, "no such user info in web ")
+		err := u.insertInfo()
+		if err != nil {
+			return nil, NewError(1, "no such user info in web ")
+		}
 	}
 	var data UserTotalData
 	data.Info = *u
@@ -114,6 +161,7 @@ func (u *UserInfo) getInfo(uid int64) (*UserTotalData, error) {
 		return nil, NewError(1, "no such user info in sso")
 	}
 	data.SSOmeta = *ssodata
+	SetUserinfo2Cache(data)
 	return &data, nil
 
 }

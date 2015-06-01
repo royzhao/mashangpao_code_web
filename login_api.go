@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	ssoEndpoint  = "http://sso.learn4me.com"
-	ssoClient, _ = client.NewSSOClient(ssoEndpoint)
+	// ssoEndpoint  = "http://sso.learn4me.com"
+	ssoClient *client.SSOClient
+	//
 )
 
 type appInfo struct {

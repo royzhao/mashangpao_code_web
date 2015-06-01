@@ -21,6 +21,15 @@ type Image_issue struct {
 	Status      int    `json:"status"`
 }
 
+type Image_issue_info struct {
+	Id          int64         `json:"id"`
+	Create_date string        `json:"create_date"`
+	Image_id    int64         `json:"image_id"`
+	Author      *UserSafeData `json:"author"`
+	Title       string        `json:"title"`
+	Content     string        `json:"content"`
+	Status      int           `json:"status"`
+}
 type Image_issue_comment struct {
 	Id          int64  `json:"id"`
 	Create_date string `json:"create_date"`
@@ -30,12 +39,23 @@ type Image_issue_comment struct {
 	Content     string `json:"content"`
 	Status      int    `json:"status"`
 }
+
+type Image_issue_comment_info struct {
+	Id          int64         `json:"id"`
+	Create_date string        `json:"create_date"`
+	Issue_id    int64         `json:"issue_id"`
+	Reply_to    int64         `json:"reply_to"`
+	Author      *UserSafeData `json"author"`
+	Content     string        `json:"content"`
+	Status      int           `json:"status"`
+}
+
 type Image_issue_comment_json struct {
-	Issue Image_issue           `json:"issue"`
-	List  []Image_issue_comment `json:"list"`
-	Total int64                 `json:"total"`
-	Page  int                   `json:"page"`
-	Num   int                   `json:"num"`
+	Issue Image_issue_info           `json:"issue"`
+	List  []Image_issue_comment_info `json:"list"`
+	Total int64                      `json:"total"`
+	Page  int                        `json:"page"`
+	Num   int                        `json:"num"`
 }
 type Image_issue_json struct {
 	List  []Image_issue `json:"list"`
@@ -130,12 +150,12 @@ func FindImageIssueComment(key string, page int, num int, issue_id int64) Image_
 
 	res.Total = total
 	issue := GetImageIssueById(issue_id)
-	res.Issue = issue
+	res.Issue = convertImage2ImageOne(issue)
 	var res_modle []Image_issue_comment
 	cmd = fmt.Sprintf("%s order by create_date DESC limit  %d,%d", cmd, (page-1)*num, num)
 	_, err = dbmap.Select(&res_modle, cmd)
 	checkErr(err, "select condition failed")
-	res.List = res_modle
+	res.List = convertImage2Imageinfo(res_modle)
 	return res
 }
 func DeleteDataImageIssueComment(comment_id int64) error {

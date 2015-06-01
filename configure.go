@@ -8,6 +8,7 @@ import (
 type Configuration struct {
 	Endpoint        string
 	BrowserEndpoint string
+	SSO             string
 	Dockerhub       string
 	Redis_addr      string
 	DB_addr         string

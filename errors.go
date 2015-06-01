@@ -9,6 +9,7 @@ const (
 	// Error codes
 	ErrCodeNotExist      = 1
 	ErrCodeAlreadyExists = 2
+	ErrCodeOK            = 6
 )
 
 // The serializable Error structure.
