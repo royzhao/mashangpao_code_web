@@ -127,6 +127,32 @@ func (u *UserInfo) getInfoFilter(uid int64) (*UserSafeData, error) {
 	}
 	return &ret, nil
 }
+
+func (u *UserInfo) updateUserCache() {
+	var data UserTotalData
+	user, _ := GetUserinfoByCache(u.UserId)
+	if user != nil {
+		user.Info = *u
+		data = *user
+	} else {
+		userchan := make(chan *client.UserInfo, 1)
+		//query it
+		go func() {
+			total, err := GetUserTotalInfoByID(u.UserId)
+			if err != nil {
+				userchan <- nil
+			}
+			userchan <- total
+		}()
+		data.Info = *u
+		ssodata := <-userchan
+		if ssodata == nil {
+			DelKeyValue(fmt.Sprintf("user_%d", u.UserId))
+		}
+		data.SSOmeta = *ssodata
+	}
+	SetUserinfo2Cache(data)
+}
 func (u *UserInfo) getInfo(uid int64) (*UserTotalData, error) {
 	//get info from redis
 	user, _ := GetUserinfoByCache(uid)

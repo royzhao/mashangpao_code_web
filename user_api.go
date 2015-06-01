@@ -50,6 +50,9 @@ func updateUserInfo(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	//update cached
+	user.updateUserCache()
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 }

@@ -53,6 +53,11 @@ func GetMd5String(s string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
+func DelKeyValue(key string) {
+	conn := pool.Get()
+	defer conn.Close()
+	conn.Do("DEL", key)
+}
 func SetValue(key string, value interface{}) error {
 	conn := pool.Get()
 	defer conn.Close()
