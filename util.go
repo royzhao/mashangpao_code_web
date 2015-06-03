@@ -101,7 +101,7 @@ func convertCode2Codeinfo(src []Code_issue_comment) []Code_issue_comment_info {
 		des[i].Reply_to = src[i].Reply_to
 		des[i].Create_date = src[i].Create_date
 		des[i].Content = src[i].Content
-		des[i].Author, _ = u.getInfoFilter(int64(src[i].Id))
+		des[i].Author, _ = u.getInfoFilter(int64(src[i].Author))
 	}
 	return des
 }
@@ -130,7 +130,7 @@ func convertImage2Imageinfo(src []Image_issue_comment) []Image_issue_comment_inf
 		des[i].Reply_to = src[i].Reply_to
 		des[i].Create_date = src[i].Create_date
 		des[i].Content = src[i].Content
-		des[i].Author, _ = u.getInfoFilter(src[i].Id)
+		des[i].Author, _ = u.getInfoFilter(src[i].Author)
 	}
 	return des
 }

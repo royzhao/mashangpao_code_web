@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/json"
 	//	"fmt"
-	"fmt"
-	"github.com/codegangsta/martini"
+	// "fmt"
+	// "github.com/codegangsta/martini"
 	"github.com/dylanzjy/coderun-request-client"
 	"net/http"
 	"net/url"
-	"strconv"
+	// "strconv"
 )
 
 var (
@@ -48,23 +48,6 @@ func isLogin(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-}
-
-func GetUserInfoByID(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
-	id, err := strconv.ParseInt(parms["userid"], 10, 64)
-	if err != nil {
-		// Invalid id, or does not exist
-		return http.StatusNotFound, Must(enc.Encode(
-			NewError(ErrCodeNotExist, fmt.Sprintf("the user with id %s does not exist", parms["userid"]))))
-	}
-	user, err := GetUserTotalInfoByID(id)
-	fmt.Println(err)
-	if err != nil {
-		// Invalid id, or does not exist
-		return http.StatusNotFound, Must(enc.Encode(
-			NewError(ErrCodeNotExist, fmt.Sprintf("the user with id %s does not exist", parms["userid"]))))
-	}
-	return http.StatusOK, Must(enc.Encode(user))
 }
 
 //func logout(w http.ResponseWriter, r *http.Request) {

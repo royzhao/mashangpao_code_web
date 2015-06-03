@@ -14,6 +14,7 @@ type Configuration struct {
 	DB_addr         string
 	App_id          string
 	App_key         string
+	LB_Addr         string
 }
 
 func ReadConfigure(name string) (Configuration, error) {

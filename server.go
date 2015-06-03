@@ -48,6 +48,7 @@ var (
 	//docker proxy
 
 	dc   *client.DockerClient
+	lb   *client.LBClient
 	conf Configuration
 
 	//hot image list timer
@@ -67,6 +68,10 @@ func init() {
 	browserEndpoint = conf.BrowserEndpoint
 	dockerhub = conf.Dockerhub
 	redis_addr := conf.Redis_addr
+	lb, err = client.NewLBClient(conf.LB_Addr)
+	if err != nil {
+		panic(err)
+	}
 	dc = nil
 	log.Println(dc)
 	redisServer = redis_addr
@@ -114,6 +119,7 @@ func init() {
 			log.Println(is_auth)
 			if len(is_auth) <= 1 {
 				token := req.Header.Get("x-session-token")
+				log.Println(token)
 				if token == "" {
 					res.WriteHeader(http.StatusUnauthorized)
 					return
@@ -144,7 +150,7 @@ func init() {
 	//得到某一个用户的所有代码
 	r.Get(`/api/user/code/:userid`, GetCodesByUser)
 	//get user info by id
-	r.Get(`/api/user/:userid/info`, GetUserInfoByID)
+	r.Get(`/api/user/:userid/info`, GetUserAvatarByID)
 	//一个用户增加一个代码
 	r.Post(`/api/user/code/:userid`, AddCode)
 	//查询一个指定的代码
@@ -189,6 +195,7 @@ func init() {
 	//code run
 	r.Put(`/api/coderun/:imagename`, RunCodeStep)
 	r.Get(`/api/coderun/:runid`, GetRunResult)
+	r.Get(`/api/prepare/:imagename`, PrePareImage)
 
 	//image api
 	r.Get("/dockerapi/images/:id/name", getImageName)

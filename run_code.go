@@ -33,6 +33,21 @@ func GetRunResult(w http.ResponseWriter, r *http.Request, enc Encoder, parms mar
 	}
 	return http.StatusOK, Must(enc.Encode(res))
 }
+
+func PrePareImage(w http.ResponseWriter, r *http.Request, enc Encoder, parms martini.Params, db codeStepDB_inter) (int, string) {
+	imageid := parms["imagename"]
+	res := Run_res{
+		Run_id: "",
+		Res:    "error",
+		Status: 6,
+	}
+	result, err := lb.PrepareImage(imageid)
+	if err != nil {
+		return http.StatusOK, Must(enc.Encode(res))
+	}
+	res.Status = result.Status
+	return http.StatusOK, Must(enc.Encode(res))
+}
 func RunCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms martini.Params, db codeStepDB_inter) (int, string) {
 	imageid := parms["imagename"]
 	decoder := json.NewDecoder(r.Body)
@@ -79,7 +94,7 @@ func RunCodeStep(w http.ResponseWriter, r *http.Request, enc Encoder, parms mart
 		return http.StatusOK, Must(enc.Encode(res))
 	} else {
 		if dc == nil {
-			dc, err = client.NewDockerClient(browserEndpoint)
+			dc, err = client.NewDockerClient(conf.BrowserEndpoint)
 			if err != nil {
 				fmt.Println(err)
 				panic(err)

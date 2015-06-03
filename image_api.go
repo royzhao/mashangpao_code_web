@@ -269,18 +269,22 @@ func listImages(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 		conn := pool.Get()
 		defer conn.Close()
 		val, err := conn.Do("GET", "hotimage")
-		if err != nil {
-			logger.Error(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		log.Println(val)
+		log.Println(err)
+		if val == nil {
+			// logger.Error(err)
+			// http.Error(w, err.Error(), http.StatusInternalServerError)
+			// return
+			list.List = HotTimerList()
+		} else {
+			tmp, _ := val.([]byte)
+			if err = json.Unmarshal(tmp, &list); err != nil {
+				logger.Error(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 		// convert interface to []byte
-		tmp, _ := val.([]byte)
-		if err = json.Unmarshal(tmp, &list); err != nil {
-			logger.Error(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
 
 		if end > 50 {
 			result.List = list.List[start:50]

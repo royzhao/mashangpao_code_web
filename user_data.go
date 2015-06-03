@@ -130,6 +130,7 @@ func (u *UserInfo) getInfoFilter(uid int64) (*UserSafeData, error) {
 
 func (u *UserInfo) updateUserCache() {
 	var data UserTotalData
+	fmt.Println("update cache")
 	user, _ := GetUserinfoByCache(u.UserId)
 	if user != nil {
 		user.Info = *u
@@ -151,6 +152,7 @@ func (u *UserInfo) updateUserCache() {
 		}
 		data.SSOmeta = *ssodata
 	}
+	fmt.Println(data)
 	SetUserinfo2Cache(data)
 }
 func (u *UserInfo) getInfo(uid int64) (*UserTotalData, error) {

@@ -3,6 +3,7 @@
 	"Dockerhub":"registry.learn4me.com:5000",
 	"SSO":"http://sso.learn4me.com",
 	"BrowserEndpoint":"http://proxy.learn4me.com",
+	"LB_Addr":"http://docker2.peilong.me:3000",
 	"Redis_addr":"redis.peilong.me:6379",
 	"DB_addr":"vpn.peilong.me:3306",
 	"App_id":"1",

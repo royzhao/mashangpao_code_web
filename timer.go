@@ -20,7 +20,7 @@ type HotImages struct {
 	Num   int       `json:"num"`
 }
 
-func HotTimerList() {
+func HotTimerList() []CRImage {
 	images := QueryImage()
 	var hotList []int
 	var hot int
@@ -33,9 +33,11 @@ func HotTimerList() {
 	var key = "hotimage"
 	//	buf, _ := json.Marshal(images)
 	buf, _ := json.Marshal(HotImages{List: images})
+
 	conn := pool.Get()
 	defer conn.Close()
 	conn.Do("SET", key, buf)
+	return images
 }
 
 func Qsort(images []CRImage, hot []int, start int, end int) {

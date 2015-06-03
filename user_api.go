@@ -77,3 +77,20 @@ func getUserInfo(w http.ResponseWriter, r *http.Request, parms martini.Params) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
+func GetUserAvatarByID(r *http.Request, enc Encoder, parms martini.Params) (int, string) {
+	id, err := strconv.ParseInt(parms["userid"], 10, 64)
+	if err != nil {
+		// Invalid id, or does not exist
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the user with id %s does not exist", parms["userid"]))))
+	}
+	var u UserInfo
+	res, _ := u.isExist(id)
+	if res == false {
+		return http.StatusNotFound, Must(enc.Encode(
+			NewError(ErrCodeNotExist, fmt.Sprintf("the user with id %s does not exist", parms["userid"]))))
+	}
+
+	return http.StatusOK, Must(enc.Encode(u))
+}
