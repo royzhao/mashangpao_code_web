@@ -1,9 +1,9 @@
 {
-	"Endpoint":"http://imagehub.learn4me.com",
+	"Endpoint":"http://127.0.0.1:4243",
 	"Dockerhub":"registry.learn4me.com:5000",
 	"SSO":"http://sso.learn4me.com",
-	"BrowserEndpoint":"http://proxy.learn4me.com",
-	"LB_Addr":"http://docker2.peilong.me:3000",
+	"BrowserEndpoint":"http://127.0.0.1:9090",
+	"LB_Addr":"http://127.0.0.1:3000",
 	"Redis_addr":"redis.peilong.me:6379",
 	"DB_addr":"vpn.peilong.me:3306",
 	"App_id":"1",

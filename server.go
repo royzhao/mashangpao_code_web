@@ -143,7 +143,7 @@ func init() {
 	})
 
 	m.Use(MapEncoder)
-
+	m.Use(AddCorsHandler)
 	r := martini.NewRouter()
 	//得到所有的代码
 	r.Get(`/api/code`, GetCodes)
@@ -198,23 +198,23 @@ func init() {
 	r.Get(`/api/prepare/:imagename`, PrePareImage)
 
 	//image api
-	r.Get("/dockerapi/images/:id/name", getImageName)
-	r.Get("/dockerapi/images", listImages)
-	r.Post("/dockerapi/image/:name/search", searchImage)
-	r.Get("/dockerapi/images/:id/list", listMyImages)
-	r.Get("/dockerapi/images/:id/log", imageLogs)
-	r.Get("/dockerapi/images/:name/verify", imageVerify)
+	r.Get("/api/images/:id/name", getImageName)
+	r.Get("/api/images", listImages)
+	r.Post("/api/image/:name/search", searchImage)
+	r.Get("/api/images/:id/list", listMyImages)
+	r.Get("/api/images/:id/log", imageLogs)
+	r.Get("/api/images/:name/verify", imageVerify)
 	//r.Delete("/dockerapi/images/{id}/delete", deleteImage)
 	//add userid
-	r.Post("/dockerapi/image/create/:userid", createImage)
-	r.Post("/dockerapi/image/commit/:userid", commitImage)
-	r.Post("/dockerapi/image/push/:userid", pushImage)
-	r.Post("/dockerapi/image/edit/:userid", editImage)
+	r.Post("/api/image/create/:userid", createImage)
+	r.Post("/api/image/commit/:userid", commitImage)
+	r.Post("/api/image/push/:userid", pushImage)
+	r.Post("/api/image/edit/:userid", editImage)
 	//
-	r.Post("/dockerapi/image/star", starImage)
-	r.Post("/dockerapi/image/fork", forkImage)
-	r.Get("/dockerapi/star/:uid/:id", queryStarid)
-	r.Get("/dockerapi/fork/:uid/:id", queryFork)
+	r.Post("/api/image/star", starImage)
+	r.Post("/api/image/fork", forkImage)
+	r.Get("/api/star/:uid/:id", queryStarid)
+	r.Get("/api/fork/:uid/:id", queryFork)
 	r.Post("/api/sso/islogin", isLogin)
 	r.Get("/api/message/query/:id", queryNotice)
 	r.Get("/api/message/read/:id", readMessageAPI)
@@ -248,6 +248,15 @@ func init() {
 
 // slash).
 var rxExt = regexp.MustCompile(`(\.(?:xml|text|json))\/?$`)
+
+//add cors
+func AddCorsHandler(c martini.Context, w http.ResponseWriter, r *http.Request) {
+	var Origin = r.Header.Get("Origin")
+	if strings.Contains(Origin, "learn4me.com") {
+		w.Header().Set("Access-Control-Allow-Origin", Origin)
+	}
+
+}
 
 // MapEncoder intercepts the request's URL, detects the requested format,
 // and injects the correct encoder dependency for this request. It rewrites
