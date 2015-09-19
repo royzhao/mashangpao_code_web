@@ -115,6 +115,18 @@ func init() {
 
 	m.Use(func(res http.ResponseWriter, req *http.Request) {
 		if req.Method != "GET" {
+			var Origin = req.Header.Get("Origin")
+			if strings.Contains(Origin, "learn4me.com") {
+				res.Header().Set("Access-Control-Allow-Origin", Origin)
+				res.Header().Set("Access-Control-Allow-Methods", req.Header.Get("Access-Control-Request-Method"))
+				res.Header().Set("Access-Control-Max-Age", "60")
+				res.Header().Set("Access-Control-Allow-Headers", req.Header.Get("Access-Control-Request-Headers"))
+				res.Header().Set("Access-Control-Allow-Credentials", "true")
+				if req.Method == "OPTIONS" {
+					res.WriteHeader(http.StatusOK)
+					return
+				}
+			}
 			is_auth := strings.Split(req.URL.Path, "coderun")
 			log.Println(is_auth)
 			if len(is_auth) <= 1 {
@@ -254,6 +266,11 @@ func AddCorsHandler(c martini.Context, w http.ResponseWriter, r *http.Request) {
 	var Origin = r.Header.Get("Origin")
 	if strings.Contains(Origin, "learn4me.com") {
 		w.Header().Set("Access-Control-Allow-Origin", Origin)
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 	}
 
 }
